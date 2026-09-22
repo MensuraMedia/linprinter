@@ -25,6 +25,8 @@ python3 -m pytest -q
 python3 -m black --check src tests tools && python3 -m pyflakes src tests tools
 # Run
 ./run.sh            # ./run.sh --test-printer for no hardware
+# Screenshots (sandbox home, test printer) and the installer package
+python3 tools/walkthrough.py && bash tools/build-deb.sh
 ```
 
 ## Project Conventions
@@ -38,7 +40,8 @@ python3 -m black --check src tests tools && python3 -m pyflakes src tests tools
 - Optional functionality goes in `src/features/feature_<name>.py`; the core only calls `FeatureRegistry` hooks.
 - USB only: nothing may use the network (`NETWORK_PRINTING = False`); IPP only to loopback; printer web pages only on localhost; no telemetry. Keep README §8 true.
 - Never print on real hardware from tests or tools; use `TestPrinter`. Printing on the user's printer needs their go-ahead.
-- Dependencies: distro packages only; add new ones to `app.json` → `offline`, then `../bin/make-offline-bundle linprinter && ../bin/test-offline linprinter`.
+- Dependencies: distro packages only; add new ones to `app.json` → `offline` **and** `PACKAGES` in `install.sh` (a test keeps them equal), then `../bin/make-offline-bundle linprinter && ../bin/test-offline linprinter`.
+- Every release: bump `VERSION`, run `tools/walkthrough.py` (screenshots) and `tools/build-deb.sh`, and commit `dist/linprinter_<version>_all.deb` + `dist/SHA256SUMS` (a test checks the checksum and contents).
 
 ## Memory & Workflow (universal-instruction-set)
 - Plan first for changes touching 3+ files; wait for approval.

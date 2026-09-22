@@ -25,3 +25,8 @@ TR150 attributes (identifiers removed); CUPS' ipptool passes against it. Tests n
 
 ## 2026-09-22 — Print to PDF default folder
 ~/Documents/prints (user's choice), changeable in Settings.
+
+## 2026-09-22 — Installer package committed in the repository
+`dist/linprinter_<version>_all.deb` + `SHA256SUMS` are committed (about 100 KB), so the repository alone
+carries both the installer script and the installer package (the user's request). The package has no
+maintainer scripts; Depends = app.json. `install.sh --package` verifies the checksum before installing.

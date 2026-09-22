@@ -1,16 +1,32 @@
 #!/usr/bin/env python3
 """
 Scripted UI walkthrough with the built-in test printer (nothing is printed on real hardware).
-Opens a sample document, prints it to the test printer and to PDF, and saves a screenshot of each page
-to docs/screenshots/. Usage: python3 tools/walkthrough.py [out_dir]
+
+Runs in a sandbox home folder (so the screenshots show ~/Documents/... and none of your own files),
+prints a report, a borderless photo, a text file and a Print to PDF, and saves a screenshot of every
+page to docs/screenshots/.  Usage: python3 tools/walkthrough.py [out_dir]
 """
 
 import os
+import subprocess
 import sys
 import tempfile
 import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.path.join(ROOT, "docs", "screenshots")
+
+# sandbox home: set before anything reads HOME or the XDG folders
+SANDBOX = tempfile.mkdtemp(prefix="linprinter-walkthrough-")
+HOME = os.path.join(SANDBOX, "home")
+os.makedirs(HOME)
+os.environ["HOME"] = HOME
+for var, sub in (
+    ("XDG_CONFIG_HOME", ".config"),
+    ("XDG_DATA_HOME", ".local/share"),
+    ("XDG_STATE_HOME", ".local/state"),
+):
+    os.environ[var] = os.path.join(HOME, sub)
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
 import gi  # noqa: E402
@@ -42,46 +58,81 @@ def wait_for(condition, timeout=30):
     raise TimeoutError("condition not met")
 
 
-def sample_pdf(path):
-    """Three pages: a letter, a landscape chart, a photo-like page"""
+def sample_documents():
+    """A report (3 pages), a photo and a text file in the sandbox home"""
     from PIL import Image, ImageDraw
 
-    pages = []
+    docs = os.path.join(HOME, "Documents")
+    pics = os.path.join(HOME, "Pictures")
+    for d in (docs, pics, os.path.join(docs, "prints")):
+        os.makedirs(d, exist_ok=True)
     a4 = (1240, 1754)
     letter = Image.new("RGB", a4, "white")
     d = ImageDraw.Draw(letter)
     d.rectangle((120, 120, 700, 200), fill=(0, 90, 170))
     for n in range(28):
         d.rectangle((120, 300 + n * 45, 1120 - (n % 4) * 120, 318 + n * 45), fill=(90, 90, 90))
-    pages.append(letter)
     chart = Image.new("RGB", (a4[1], a4[0]), "white")
     d = ImageDraw.Draw(chart)
     for n, h in enumerate((300, 520, 410, 760, 640, 880, 700)):
         d.rectangle((150 + n * 210, 1100 - h, 300 + n * 210, 1100), fill=(40 + n * 25, 120, 200 - n * 20))
     d.line((120, 1100, 1650, 1100), fill="black", width=6)
-    pages.append(chart)
-    photo = Image.new("RGB", a4)
+    table = Image.new("RGB", a4, "white")
+    d = ImageDraw.Draw(table)
+    for r in range(18):
+        for c in range(4):
+            d.rectangle(
+                (120 + c * 250, 200 + r * 70, 350 + c * 250, 250 + r * 70), outline=(120, 120, 120), width=3
+            )
+    report = os.path.join(docs, "Quarterly report.pdf")
+    letter.save(report, save_all=True, append_images=[chart, table], resolution=150)
+
+    photo = Image.new("RGB", (1800, 1200))
     d = ImageDraw.Draw(photo)
-    for y in range(a4[1]):
-        d.line((0, y, a4[0], y), fill=(30 + y // 12, 110 + y // 30, 200 - y // 12))
-    d.ellipse((700, 250, 1050, 600), fill=(255, 220, 120))
-    pages.append(photo)
-    pages[0].save(path, save_all=True, append_images=pages[1:], resolution=150)
-    return path
+    for y in range(1200):
+        d.line((0, y, 1800, y), fill=(40 + y // 10, 120 + y // 20, 220 - y // 8))
+    d.ellipse((1250, 150, 1550, 450), fill=(255, 220, 120))
+    d.polygon([(0, 1200), (600, 700), (1100, 1200)], fill=(50, 110, 60))
+    d.polygon([(700, 1200), (1300, 800), (1800, 1200)], fill=(40, 90, 50))
+    photo_path = os.path.join(pics, "Garden.jpg")
+    photo.save(photo_path, quality=92)
+
+    notes = os.path.join(docs, "Meeting notes.txt")
+    with open(notes, "w") as f:
+        f.write("Meeting notes\n=============\n\n")
+        for n in range(1, 41):
+            f.write(f"{n:2d}. Item {n}: discussed, agreed next steps and owners.\n")
+    return report, photo_path, notes
 
 
-def shot(window, out_dir, name):
+def shot(window, name):
     """Save the window as PNG"""
     pump(0.6)
     gdkwin = window.get_window()
-    w, h = gdkwin.get_width(), gdkwin.get_height()
-    pix = Gdk.pixbuf_get_from_window(gdkwin, 0, 0, w, h)
-    path = os.path.join(out_dir, f"{name}.png")
+    pix = Gdk.pixbuf_get_from_window(gdkwin, 0, 0, gdkwin.get_width(), gdkwin.get_height())
+    path = os.path.join(OUT, f"{name}.png")
     pix.savev(path, "png", [], [])
-    print("saved", path)
+    print("saved", os.path.relpath(path, ROOT))
 
 
-def main(out_dir):
+def print_and_wait(page, timeout=60):
+    """Press Print and wait for the result"""
+    page.on_print()
+    wait_for(lambda: page.ctx.printing.busy, 10)
+    wait_for(lambda: not page.ctx.printing.busy, timeout)
+    pump(0.5)
+    return page.status.get_text()
+
+
+def scroller_of(widget):
+    """The ScrolledWindow a page sits in"""
+    parent = widget.get_parent()
+    while parent is not None and not isinstance(parent, Gtk.ScrolledWindow):
+        parent = parent.get_parent()
+    return parent
+
+
+def main():
     from backends.test_printer import TestPrinter
     from config.config_themes import get_theme
     from features import FeatureRegistry
@@ -89,116 +140,156 @@ def main(out_dir):
     from modules.manager_navigation import NavigationManager
     from modules.manager_print import PrintManager
     from modules.manager_settings import SettingsManager
+    from modules.manager_testpage import make_test_page
     from modules.manager_theme_applicator import ThemeApplicator
     from ui.app_window import AppWindow
+    from utils.util_logging import setup_logging
 
-    tmp = tempfile.mkdtemp(prefix="linprinter-walkthrough-")
-    os.environ["XDG_DATA_HOME"] = os.path.join(tmp, "data")  # private Recent list
-    settings = SettingsManager(os.path.join(tmp, "settings.json"))
-    settings.override("pdf_folder", os.path.join(tmp, "prints"))
-    test = TestPrinter(spool=os.path.join(tmp, "spool"))
+    os.makedirs(OUT, exist_ok=True)
+    report, photo, notes = sample_documents()
+    settings = SettingsManager()  # sandbox ~/.config/linprinter/settings.json
+    test = TestPrinter(spool=os.path.join(SANDBOX, "spool"))
+    test.job_seconds = 0.5
     test.start()
     printing = PrintManager(settings, test_printer_uri=test.uri, use_cups=False, probe_usb=False)
     theme = ThemeApplicator()
     theme.apply_theme(get_theme(settings.get("theme")))
     ctx = AppContext(settings, printing, NavigationManager(), theme)
     ctx.features = FeatureRegistry(settings)
+    ctx.features.set_enabled("profiles", True)
+    ctx.log_path = setup_logging()
     window = AppWindow(ctx)
     window.resize(1180, 900)
     window.show_all()
     ctx.nav.navigate_to("print")
     page = ctx.nav.get_page_widget("print")
     wait_for(lambda: page.power_state == "ok")
-    doc = sample_pdf(os.path.join(tmp, "sample-report.pdf"))
-    page.open_document(doc)
-    wait_for(lambda: page.selected_pages())
-    shot(window, out_dir, "01-print")
 
+    # 1. a report: open, preview, print in black & white
+    page.open_document(report)
+    wait_for(lambda: page.doc_label.get_text().startswith("Quarterly"))
+    page.apply_choices({"size": "iso_a4_210x297mm"})
+    shot(window, "01-print")
     ctx.nav.navigate_to("preview")
     pump(3)
-    shot(window, out_dir, "02-preview")
-
+    shot(window, "02-preview")
+    preview = ctx.nav.get_page_widget("preview")
+    preview.rows.set_active("2")
+    preview.on_rows("2")
+    pump(1.5)
+    shot(window, "02b-preview-two-rows")
+    preview.rows.set_active("1")
+    preview.on_rows("1")
     ctx.nav.navigate_to("print")
-    page.color.set_active("monochrome")
-    page.quality.set_active("draft")
-    page.update_summary()  # set_active() in code does not fire the change callback
+    page.apply_choices({"color": "monochrome", "quality": "normal"})
+    test.job_seconds = 6  # long enough to see it printing
     page.on_print()
-    wait_for(
-        lambda: page.progress.get_fraction() == 1
-        or "status-error" in page.status.get_style_context().list_classes(),
-        60,
-    )
-    print("print:", page.status.get_text())
+    wait_for(lambda: "Printing" in page.status.get_text(), 30)
     pump(1)
-    shot(window, out_dir, "03-printed")
+    shot(window, "03-printing")
+    wait_for(lambda: not printing.busy, 60)
+    pump(0.5)
+    shot(window, "03b-printed")
+    test.job_seconds = 0.5
 
+    # 2. a photo, borderless on 4 x 6 in glossy photo paper
+    page.open_document(photo)
+    wait_for(lambda: page.doc_label.get_text().startswith("Garden"))
+    page.apply_choices(
+        {
+            "color": "color",
+            "quality": "high",
+            "type": "photographic",
+            "size_stem": "na_index-4x6",
+            "borderless": True,
+        }
+    )
+    pump(0.5)
+    shot(window, "04-photo-borderless")
+    ctx.nav.navigate_to("preview")
+    pump(2.5)
+    shot(window, "04b-photo-preview")
+    ctx.nav.navigate_to("print")
+    print("photo:", print_and_wait(page))
+
+    # 3. text notes, draft (left in the queue for the screenshot, then cancelled)
+    page.open_document(notes)
+    wait_for(lambda: page.doc_label.get_text().startswith("Meeting"))
+    page.apply_choices(
+        {
+            "quality": "draft",
+            "color": "monochrome",
+            "size": "iso_a4_210x297mm",
+            "type": "stationery",
+            "borderless": False,
+        }
+    )
+    test.job_seconds = 30
+    page.on_print()
+    wait_for(lambda: "Printing" in page.status.get_text(), 30)
     ctx.nav.navigate_to("queue")
-    pump(2)
-    shot(window, out_dir, "04-queue")
+    pump(2.5)
+    shot(window, "05-queue")
+    ctx.nav.navigate_to("print")
+    printing.cancel()
+    wait_for(lambda: not printing.busy, 60)
+    test.job_seconds = 0.5
 
+    # 4. Print to PDF
+    page.printer_combo.set_active_id("pdf:")
+    wait_for(lambda: page.printer is not None and page.printer.key == "pdf:")
+    page.open_document(report)
+    wait_for(lambda: page.doc_label.get_text().startswith("Quarterly"))
+    print("pdf:", print_and_wait(page))
+    shot(window, "06-print-to-pdf")
+    page.printer_combo.set_active(0)
+    wait_for(lambda: page.printer is not None and page.printer.key != "pdf:")
+
+    # 5. printers, setup and test
     ctx.nav.navigate_to("printers")
     pump(2)
-    shot(window, out_dir, "05-printers")
+    shot(window, "07-printers")
     printers = ctx.nav.get_page_widget("printers")
-    scroller = (
-        printers.get_parent().get_parent()
-        if isinstance(printers.get_parent(), Gtk.Viewport)
-        else printers.get_parent()
-    )
-    scroller.get_vadjustment().set_value(430)
-    tp = printing.printer(page.printer.id)
+    tp = page.printer
     result = {}
-    printing.print_test_page(
-        tp, "quality", lambda t: None, lambda r: result.update(r), lambda e: result.update(error=e)
-    )
+    printing.print_test_page(tp, "quality", lambda t: None, result.update, lambda e: result.update(error=e))
     wait_for(lambda: result, 60)
-    print("test page:", result, "| jobs on test printer:", len(test.jobs))
     printers.test_labels[tp.id].set_text("Test page printed. Compare it with the notes on the page.")
-    shot(window, out_dir, "05b-printer-setup")
-    import subprocess
-
+    scroller_of(printers).get_vadjustment().set_value(430)
+    shot(window, "07b-printer-setup")
     for kind in ("quality", "lines"):
-        from modules.manager_testpage import make_test_page
-
         t = printing.test_ticket(tp, kind)
         pdf = make_test_page(
-            kind, os.path.join(tmp, f"{kind}.pdf"), t["size_mm"], t["margins_mm"], tp.name, t, tp.firmware
+            kind, os.path.join(SANDBOX, f"{kind}.pdf"), t["size_mm"], t["margins_mm"], tp.name, t, tp.firmware
         )
+        png = os.path.join(OUT, f"08-test-page-{kind}.png")
+        gs = ["gs", "-q", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=png16m", "-r60"]
         subprocess.run(
-            [
-                "gs",
-                "-q",
-                "-dSAFER",
-                "-dBATCH",
-                "-dNOPAUSE",
-                "-sDEVICE=png16m",
-                "-r50",
-                f"-sOutputFile={os.path.join(out_dir, f'10-test-page-{kind}.png')}",
-                pdf,
-            ],
-            check=True,
+            gs + ["-dTextAlphaBits=4", "-dGraphicsAlphaBits=4", f"-sOutputFile={png}", pdf], check=True
         )
+        print("saved", os.path.relpath(png, ROOT))
 
+    # 6. recent, settings, about
     ctx.nav.navigate_to("recent")
     pump(1)
-    shot(window, out_dir, "06-recent")
-
+    shot(window, "09-recent")
     ctx.nav.navigate_to("settings")
-    shot(window, out_dir, "07-settings")
+    shot(window, "10-settings")
     ctx.nav.navigate_to("about")
-    shot(window, out_dir, "08-about")
+    shot(window, "11-about")
 
+    # 7. paper out: plain message, red mark, no fallback
     test.set_state(["media-empty-error"])
     ctx.nav.navigate_to("print")
     page.check_status()
     pump(2)
-    shot(window, out_dir, "09-paper-out")
-    print("status:", page.printer_message.get_text() or page.status.get_text())
-    print("jobs:", [(j["id"], j.get("state")) for j in test.jobs.values()])
+    shot(window, "12-paper-out")
+    print("paper out:", page.printer_message.get_text())
+    print("jobs on the test printer:", len(test.jobs))
     window.destroy()
     printing.cleanup()
     test.stop()
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "docs", "screenshots"))
+    main()

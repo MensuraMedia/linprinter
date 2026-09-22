@@ -477,7 +477,7 @@ class PrintPage(BasePage):
         ticket = self.ticket()
         text = self.ctx.printing.summary(ticket, pages or [1], self.printer)
         where = (
-            f" → {self.ctx.settings.get('pdf_folder')}"
+            f" → {self.ctx.settings.get('pdf_folder').replace(os.path.expanduser('~'), '~', 1)}"
             if self.printer.virtual and self.printer.key == "pdf:"
             else ""
         )
@@ -518,6 +518,7 @@ class PrintPage(BasePage):
             self.doc_label.get_style_context().remove_class("muted")
             self.doc_label.set_text(f"{os.path.basename(doc['path'])} · {doc['pages']} page(s)")
             self.set_status("")
+            self.progress.set_fraction(0)  # the last job's bar belongs to the last document
             self.update_summary()
             self.ctx.emit("document-changed", doc)
 
@@ -577,7 +578,8 @@ class PrintPage(BasePage):
         state = result.get("state")
         self.progress.set_fraction(1 if state == "completed" else 0)
         if result.get("file"):
-            self.set_status(f"Saved as PDF: {result['file']}", "status-ok")
+            home = os.path.expanduser("~")
+            self.set_status(f"Saved as PDF: {result['file'].replace(home, '~', 1)}", "status-ok")
         elif state == "completed":
             self.set_status(f"Printed on {printer.name}.", "status-ok")
         elif state == "canceled":

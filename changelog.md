@@ -2,6 +2,20 @@
 
 All notable changes to LinPrinter. Semantic versioning; newest first.
 
+## 0.2.1 — 2026-09-22
+
+- Installer package: `dist/linprinter_0.2.1_all.deb` (+ `SHA256SUMS`), built by `tools/build-deb.sh`
+  (/opt/linprinter, `linprinter` command, menu entry for all users, depends on the app.json packages).
+- `install.sh --package` installs it system-wide (checksum-verified, offline pool first, removes the
+  duplicate per-user entry); `--uninstall` also removes the package.
+- Tested offline in a clean ubuntu:24.04 container (no network): package and both installer modes.
+- Screenshots: 17, from a sandbox home (report, borderless photo, text, Print to PDF, queue, recent,
+  printers, setup and test, test pages, settings, about, paper out); README rewritten with a screenshot tour.
+- UI polish: Profile row inside Print Options; paths shown with ~ (Printers, PDF summary and result);
+  Recent columns fit the window; progress bar cleared when a new document is opened; Print to PDF
+  capabilities read "1" copy and "any" paper type.
+- Tests: packaging (install.sh and app.json lists equal; package checksum and contents) — 35 tests.
+
 ## 0.2.0 — 2026-09-22
 
 First working release (roadmap 0.1 + 0.2 in docs/CONCEPT.md).

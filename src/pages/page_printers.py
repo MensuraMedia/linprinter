@@ -22,6 +22,14 @@ from pages.page_base import BasePage  # noqa: E402
 from utils.util_logging import get_logger  # noqa: E402
 
 log = get_logger("ui")
+
+
+def tilde(text):
+    """Text with the home folder shown as ~"""
+    home = os.path.expanduser("~")
+    return text.replace(home, "~", 1) if home and home != "/" else text
+
+
 LEVEL_CSS = {"ok": "status-ok", "warn": "status-busy", "error": "status-error"}
 
 
@@ -332,7 +340,11 @@ class PrintersPage(BasePage):
         out = [
             (
                 "Connection",
-                [(f"{n + 1}.", m.label) for n, m in enumerate(p.methods)] or [("Methods", "none yet")],
+                [
+                    (f"{n + 1}.", tilde(m.label) if m.code == "PDF" else m.label)
+                    for n, m in enumerate(p.methods)
+                ]
+                or [("Methods", "none yet")],
             )
         ]
         if p.usb:
@@ -351,10 +363,10 @@ class PrintersPage(BasePage):
             )
             items = [
                 ("Paper sizes", sizes or "—"),
-                ("Paper types", ", ".join(type_label(t) for t in caps.types) or "—"),
+                ("Paper types", ", ".join(type_label(t) for t in caps.types) or "any (not needed for a PDF)"),
                 ("Color", ", ".join(COLOR_MODES.get(c, c) for c in caps.colors)),
                 ("Quality", ", ".join(QUALITIES.get(q, q) for q in caps.qualities)),
-                ("Copies", f"1–{caps.copies_max}"),
+                ("Copies", f"1–{caps.copies_max}" if caps.copies_max > 1 else "1"),
                 ("Two-sided", "yes" if any(s != "one-sided" for s in caps.sides) else "no (one-sided only)"),
                 (
                     "Borderless",

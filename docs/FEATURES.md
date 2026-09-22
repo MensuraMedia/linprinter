@@ -17,3 +17,6 @@
 | Feature: Ink alerts | Warns before printing at or below the low-ink level (on) | features/feature_ink_alerts.py |
 | Feature: Print profiles | Built-in and saved presets on the Print page (off) | features/feature_profiles.py |
 | Test printer | --test-printer, tests, walkthrough | backends/test_printer.py |
+| Installer script | Per-user install from the checkout; offline pool first; OK / FIXED / FAIL summary | install.sh |
+| Installer package | System-wide .deb (/opt/linprinter, `linprinter`), checksum-verified; `install.sh --package` | tools/build-deb.sh, dist/ |
+| Screenshots | 17 screenshots from a sandbox home with the test printer | tools/walkthrough.py, docs/screenshots/ |

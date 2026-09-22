@@ -74,7 +74,7 @@ class Feature(BaseFeature):
         row.pack_start(save, False, False, 0)
         page.profile_row = page.form_row("Profile", row)
         page.options_card.pack_start(page.profile_row, False, False, 0)
-        page.options_card.reorder_child(page.profile_row, 0)
+        page.options_card.reorder_child(page.profile_row, 1)  # below the card title
         page.profile_row.set_no_show_all(True)
         page.ctx.on("features-changed", lambda *_: self._visibility(page))
         self._visibility(page)

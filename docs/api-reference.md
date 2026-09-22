@@ -548,6 +548,7 @@ Constants: `LEVEL_CSS`
 
 | Symbol | Purpose |
 |---|---|
+| `tilde(text)` | Text with the home folder shown as ~ |
 | class `InkGauge(Gtk.DrawingArea)` | One cartridge: a bar filled to its level in the cartridge's colours |
 | &nbsp;&nbsp;`.__init__(self, marker)` |  |
 | &nbsp;&nbsp;`.on_draw(self, _widget, cr)` | Frame, then one stripe per colour up to the level |

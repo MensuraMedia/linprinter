@@ -109,12 +109,12 @@ class RecentPage(BasePage):
         self.store.set_sort_column_id(C_SORT, Gtk.SortType.DESCENDING)  # newest first
         self.view = Gtk.TreeView(model=self.store)
         self.view.set_enable_search(False)
-        self._add_text_column("Date printed", C_DATE, 150, sort=C_SORT)
+        self._add_text_column("Date printed", C_DATE, 140, sort=C_SORT)
         self._add_icon_column(C_FOLDER_ICON, "open_folder", "Open the folder in your file manager")
-        self._add_text_column("Folder", C_FOLDER, 260, expand=True, ellipsize=Pango.EllipsizeMode.MIDDLE)
-        self._add_text_column("File name", C_NAME, 250, sort=C_NAME, ellipsize=Pango.EllipsizeMode.END)
+        self._add_text_column("Folder", C_FOLDER, 200, expand=True, ellipsize=Pango.EllipsizeMode.MIDDLE)
+        self._add_text_column("File name", C_NAME, 200, sort=C_NAME, ellipsize=Pango.EllipsizeMode.END)
         self._add_icon_column(C_DOC_ICON, "open_document", "Open on the Print page to print it again")
-        self._add_text_column("Printer", C_FORMAT, 190, ellipsize=Pango.EllipsizeMode.END)
+        self._add_text_column("Printer", C_FORMAT, 170, ellipsize=Pango.EllipsizeMode.END)
         self._add_text_column("Pages", C_PAGES, 60, xalign=1.0)
         self._add_icon_column(C_TRASH, "forget", "Remove from this list (the file is not touched)")
         self.view.set_fixed_height_mode(True)  # uniform rows

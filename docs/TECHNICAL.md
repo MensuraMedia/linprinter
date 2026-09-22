@@ -51,3 +51,22 @@ marker-supply-empty and input-tray-missing.
 `resources/test-printer/tr150-attributes.json` (112 attributes with their tags; UUID zeroed, device-id
 simplified). Print-Job saves the document in its spool and completes after `job_seconds`. `set_state()`
 simulates paper-out and similar states. CUPS' `ipptool get-printer-attributes.test` passes against it.
+
+## Packaging and installation
+- `tools/build-deb.sh` builds `dist/linprinter_<version>_all.deb` (architecture all, xz). It contains:
+  - `/opt/linprinter` (src, resources, VERSION, LICENSE, README, run.sh);
+  - `/usr/bin/linprinter`, which runs `python3 /opt/linprinter/src/main.py`;
+  - `/usr/share/applications/linprinter.desktop` with `StartupWMClass=linprinter`;
+  - the hicolor 512 px icon, the copyright file (the licence) and the changelog.
+
+  `Depends` is the `app.json` → `offline.apt` list. There are no maintainer scripts. `dist/SHA256SUMS`
+  is written next to the package.
+- `install.sh` has three modes:
+  - default: per user, runs from the checkout;
+  - `--package`: verifies the checksum, then `sudo dpkg -i`, and removes the per-user entry;
+  - `--uninstall`: removes the per-user entry and icon, and the package if it's installed.
+
+  Dependencies come from `../bin/offline-install` (the linux-peripherals pool) first, then apt.
+  `LINPRINTER_ALLOW_ROOT=1` lets it run as root, for container tests only.
+- Verified offline in `ubuntu:24.04 --network none`: the dependencies from the pool, then the package
+  (`linprinter --version`, `--list-printers`), and both installer modes, including re-runs and uninstall.
