@@ -1,0 +1,2 @@
+Phosphor Icons v2.0.8 by Helena Zhang and Tobias Fried (MIT, see LICENSE). https://phosphoricons.com/
+Only the icons linscanner uses (regular weight) are copied here; the full set and INDEX.txt are in ~/projects/assets/Icons/phosphoricons.

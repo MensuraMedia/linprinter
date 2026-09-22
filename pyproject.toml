@@ -1,0 +1,7 @@
+# linprinter tool configuration (no packaging: the app runs from src/ with distro Python)
+[tool.black]
+line-length = 110
+target-version = ["py310"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

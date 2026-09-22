@@ -1,0 +1,7 @@
+[
+  {"time": "2026-09-22T04:30:00Z", "version": "0.0.1", "type": "docs", "summary": "Technical concept for LinPrinter based on the Canon TR150"},
+  {"time": "2026-09-22T06:30:00Z", "version": "0.2.0", "type": "feat", "summary": "Print, Preview, Queue, Recent, Printers, Settings, About; direct IPP + CUPS; Print to PDF"},
+  {"time": "2026-09-22T06:31:00Z", "version": "0.2.0", "type": "feat", "summary": "Setup and test: printer defaults, quality and line test pages, maintenance page links"},
+  {"time": "2026-09-22T06:32:00Z", "version": "0.2.0", "type": "feat", "summary": "Built-in TR150 test printer (--test-printer), ink alerts and print profiles features"},
+  {"time": "2026-09-22T06:33:00Z", "version": "0.2.0", "type": "chore", "summary": "Installer (offline pool, menu entry, icon), app.json, noncommercial licence, tests"}
+]

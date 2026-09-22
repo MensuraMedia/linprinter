@@ -1,0 +1,74 @@
+LinPrinter Community License (Noncommercial), version 1.0
+
+Copyright (c) 2026 MensuraMedia. All rights reserved except as granted below.
+
+Thank you for your interest in LinPrinter. We want it to be useful to as
+many people as possible, so it is free to use, share and improve. We ask
+only that it not be used commercially without talking to us first.
+
+1. What you may do
+
+   Anyone may, free of charge and for any noncommercial purpose:
+
+   a. use LinPrinter, on as many computers as they like;
+   b. copy it;
+   c. modify it and create works based on it; and
+   d. distribute it, in original or modified form.
+
+2. Conditions
+
+   a. Keep this license and the copyright notice with every copy, and with
+      every substantial portion of the software.
+   b. If you distribute a modified version, please say that it has been
+      changed, so that people know it is not the original.
+   c. Anyone who receives a copy from you receives it under this same
+      license, including the noncommercial condition below.
+
+3. Commercial use
+
+   Commercial use is not permitted without the express written permission
+   of MensuraMedia. We are glad to hear from anyone who would like to use
+   LinPrinter commercially; please contact us through
+   https://github.com/MensuraMedia and we will be happy to discuss it.
+
+   "Commercial use" means any use that is primarily intended for, or
+   directed toward, commercial advantage or monetary compensation. For
+   example:
+
+   - selling LinPrinter, or a modified version, or charging for access to
+     it;
+   - including it in a product, device, service or package that is sold or
+     licensed for a fee;
+   - offering it as a paid or hosted service; and
+   - using it in the operations of a business or other for-profit
+     organisation.
+
+   The following are considered noncommercial and are welcome: personal
+   and household use; education, study and academic research; use by
+   charities, public-benefit and community organisations for their
+   not-for-profit activities; and evaluating the software to decide
+   whether to seek a commercial license.
+
+4. Third-party components
+
+   LinPrinter relies on software that it does not own, including Python,
+   GTK, CUPS, cups-filters, ipp-usb, Pillow, Ghostscript, system fonts,
+   Phosphor Icons and, optionally, vendor printer drivers. Its interface is
+   based on gtk-python-dashboard-starter by mikesdatawork. Each of these
+   keeps its own license, and this license does not change or replace those
+   terms.
+
+5. No warranty
+
+   LinPrinter is provided "as is", without warranty of any kind, express or
+   implied, including the warranties of merchantability, fitness for a
+   particular purpose and non-infringement. In no event shall the authors
+   or copyright holders be liable for any claim, damages or other
+   liability, whether in contract, tort or otherwise, arising from, out of
+   or in connection with the software or its use.
+
+6. Ending the license
+
+   If you break these terms, your rights under this license end. They are
+   restored automatically if you put things right within 30 days of
+   becoming aware of the problem.
