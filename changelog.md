@@ -2,6 +2,13 @@
 
 All notable changes to LinPrinter. Semantic versioning; newest first.
 
+## 0.2.4 — 2026-09-23
+
+- **Zoom further into documents**: the maximum goes from 8× to **16×** (steps unchanged), previews are
+  rendered at 140 dpi instead of 60, and zooming past a page's own resolution now keeps enlarging the
+  view instead of silently stopping. One zoomed page is capped at 40 megapixels, so a big zoom can't
+  eat memory.
+
 ## 0.2.3 — 2026-09-23
 
 - **Keeps the printer connection by itself.** When the printer stops answering, the Print page now

@@ -17,6 +17,21 @@ import threading
 from PIL import Image
 
 PROXY_MAX_SIDE = 2200
+MAX_RENDER_PIXELS = 40_000_000  # ~160 MB as RGB: the ceiling for one zoomed page
+
+
+def _fit_within(size, max_w, max_h):
+    """The size that fits max_w x max_h keeping the aspect ratio, capped by MAX_RENDER_PIXELS.
+
+    Unlike Image.thumbnail this also enlarges, so zooming past the page's own resolution
+    keeps growing the view instead of silently stopping."""
+    w, h = size
+    if not w or not h:
+        return size
+    scale = min(max_w / w, max_h / h)
+    budget = (MAX_RENDER_PIXELS / (w * h)) ** 0.5
+    scale = min(scale, budget)
+    return max(1, round(w * scale)), max(1, round(h * scale))
 
 
 class DisplayCache:
@@ -103,7 +118,10 @@ class DisplayCache:
         img = flatten(dict(page, dpi=dpi), img=src.copy() if src is not None else None)
         if img.mode not in ("RGB", "L"):
             img = img.convert("RGB")
-        img.thumbnail((max(max_w, 1), max(max_h, 1)), Image.BILINEAR)
+        target = _fit_within(img.size, max(max_w, 1), max(max_h, 1))
+        if target != img.size:
+            # shrink to fit, or enlarge for deep zoom (capped so a big zoom can't eat memory)
+            img = img.resize(target, Image.BILINEAR if target[0] < img.width else Image.LANCZOS)
         return img.convert("RGB")
 
     def size(self, page):

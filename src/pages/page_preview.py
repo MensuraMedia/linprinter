@@ -19,7 +19,7 @@ from ui.components.component_preview import PagePreview  # noqa: E402
 from ui.components.component_segmented import SegmentedControl  # noqa: E402
 from utils.util_icons import icon_button  # noqa: E402
 
-PREVIEW_DPI = 60
+PREVIEW_DPI = 140  # previews are rendered at this resolution, so zooming in shows real detail
 
 
 class PreviewPage(BasePage):

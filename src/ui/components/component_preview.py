@@ -21,7 +21,7 @@ from config.config_layout import Layout  # noqa: E402
 from utils.util_display import DisplayCache, page_key  # noqa: E402
 from utils.util_logging import get_logger  # noqa: E402
 
-ZOOM_STEPS = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0]  # x fit-to-window
+ZOOM_STEPS = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0, 10.0, 12.0, 16.0]  # x fit-to-window
 THUMB_CACHE_MAX = 400
 LARGE_CACHE_MAX = 6
 

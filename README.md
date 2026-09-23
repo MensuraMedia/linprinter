@@ -11,11 +11,11 @@ USB-only privacy.
 
 | | |
 |---|---|
-| Version | 0.2.3 (see [changelog.md](changelog.md)) |
+| Version | 0.2.4 (see [changelog.md](changelog.md)) |
 | Verified printer | Canon TR150 series (USB, driverless) |
 | Platform | Linux desktop (Linux Mint 22 / Ubuntu 24.04 and other Debian-based systems), GTK 3, Python 3.10+ |
 | Connection | **USB cable only.** Wi-Fi and network printing are not supported at this time. |
-| Install | `bash install.sh` (runs from this folder), or the installer package [`dist/linprinter_0.2.3_all.deb`](dist/) (system-wide). Both work offline with the linux-peripherals package pool. |
+| Install | `bash install.sh` (runs from this folder), or the installer package [`dist/linprinter_0.2.4_all.deb`](dist/) (system-wide). Both work offline with the linux-peripherals package pool. |
 | Licence | [LinPrinter Community License (Noncommercial) 1.0](LICENSE): free to use, copy, modify and share; commercial use needs our written permission |
 
 ## Contents
@@ -41,7 +41,7 @@ USB-only privacy.
 | **Detect Printer** | **Find**, the printer list, and a power mark. If the printer stops answering (asleep, switched off and on, or a bad USB port), LinPrinter searches again by itself every 20 seconds and says "<printer> is back" - no need to press Find: green when the printer is ready, amber when it needs attention, red when it's off or stopped. The message under it is plain, such as "Printer may be off. Check power settings." or "Load paper in the rear tray." LinPrinter remembers the printer, so the next start reaches it straight away. |
 | **Documents** | PDF, PNG, JPEG, TIFF (multi-page), BMP, GIF and plain text. Open one with **Open…**, drop it on the Print page, or **right-click it in your file manager → Open With → LinPrinter**. |
 | **Print Options** | Copies · Color or Black & White · Draft / Normal / High · Pages (All, a range such as `1-3, 5`, Odd, Even, Current) · Paper Size (grouped: documents, photos, envelopes, cards) · Paper Type (plain, photo, glossy, matte, envelopes, Hagaki …) · Borderless · Fit to page or Actual size. **Only the options your printer really has are offered.** A line under the options says exactly what will print. |
-| **Preview** | The pages exactly as they will print: your paper, the printer's margins shaded, colour or grey, and pages turned to suit the paper. It has zoom, page navigation and 1- or 2-row thumbnails. |
+| **Preview** | The pages exactly as they will print: your paper, the printer's margins shaded, colour or grey, and pages turned to suit the paper. It zooms from a quarter size up to **16×** (Ctrl + wheel, or the buttons), with page navigation and 1- or 2-row thumbnails. Previews are rendered at 140 dpi, so zooming in shows real detail rather than a blur. |
 | **Queue** | Waiting, printing and finished jobs, with the pages done, the time sent and how each job was sent. **Cancel job** stops a waiting or printing one. |
 | **Recent** | Documents you've printed, newest first. The folder icon opens the folder; the document icon prints it again. Clear all entries, or those older than 5 / 10 / 20 / 30 days. |
 | **Printers Found** | Every printer and how LinPrinter reaches it, best way first. Also USB details, capabilities, firmware, **ink levels** drawn in the cartridges' own colours, and **Identify** (the printer flashes). |
@@ -117,7 +117,7 @@ for sudo only when something must be installed.
 
 | | Installer script (default) | Installer package |
 |---|---|---|
-| Command | `bash install.sh` | `bash install.sh --package`, or `sudo apt install ./dist/linprinter_0.2.3_all.deb` |
+| Command | `bash install.sh` | `bash install.sh --package`, or `sudo apt install ./dist/linprinter_0.2.4_all.deb` |
 | Installs to | runs from this folder | `/opt/linprinter`, command `linprinter` |
 | Menu entry | for you (`~/.local/share/applications`) | for every user |
 | Updates | `git pull` | install the new `.deb` |
@@ -153,7 +153,7 @@ This mode:
 - runs the same checks as the default install.
 
 You can also install the package directly with
-`sudo apt install ./dist/linprinter_0.2.3_all.deb`: apt fetches any missing
+`sudo apt install ./dist/linprinter_0.2.4_all.deb`: apt fetches any missing
 dependency. To rebuild the package after a change, run
 `bash tools/build-deb.sh`.
 
