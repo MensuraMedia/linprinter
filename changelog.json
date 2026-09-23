@@ -58,5 +58,17 @@
     "version": "0.2.1",
     "type": "test",
     "summary": "Packaging tests (package list, checksum, contents); offline install tested in ubuntu:24.04"
+  },
+  {
+    "time": "2026-09-23T15:37:31Z",
+    "version": "0.2.2",
+    "type": "feat",
+    "summary": "Open with LinPrinter: run.sh FILE opens a document; desktop entry gains %F and MimeType"
+  },
+  {
+    "time": "2026-09-23T15:48:06Z",
+    "version": "0.2.3",
+    "type": "feat",
+    "summary": "Auto-reconnect: the Print page searches again when the printer stops answering and says when it is back"
   }
 ]

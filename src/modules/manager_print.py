@@ -178,6 +178,15 @@ class PrintManager:
             )
         return printers
 
+    @staticmethod
+    def should_reconnect(level, misses, seconds_since_last_try, busy, virtual=False):
+        """Search for the printer again? (unreachable a few times, not printing, not too often)"""
+        from config.config_print import RECONNECT_AFTER_MISSES, RECONNECT_EVERY
+
+        if busy or virtual or level != "error":
+            return False
+        return misses >= RECONNECT_AFTER_MISSES and seconds_since_last_try >= RECONNECT_EVERY
+
     def refresh_printers(self, on_done, on_error):
         """Find printers in the background"""
         self._in_thread(self.discover, on_done, on_error)

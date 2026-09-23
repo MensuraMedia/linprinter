@@ -42,11 +42,12 @@ Type=Application
 Name=LinPrinter
 GenericName=Document Printer
 Comment=Print documents, check ink, test and set up your USB printer, or print to PDF
-Exec=linprinter
+Exec=linprinter %F
 Icon=linprinter
 StartupWMClass=linprinter
 Terminal=false
 Categories=Office;Printing;
+MimeType=application/pdf;image/png;image/jpeg;image/tiff;image/bmp;image/gif;text/plain;text/csv;text/markdown;
 Keywords=print;printer;pdf;ink;cups;test page;
 EOF
 

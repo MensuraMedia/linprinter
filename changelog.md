@@ -2,6 +2,22 @@
 
 All notable changes to LinPrinter. Semantic versioning; newest first.
 
+## 0.2.3 — 2026-09-23
+
+- **Keeps the printer connection by itself.** When the printer stops answering, the Print page now
+  searches again quietly (after 2 failed checks, at most every 20 s), keeps your selection, and shows
+  "<printer> is back" when it returns. A printer listed but unreachable counts as a failed check too.
+  Never while printing, and never for Print to PDF.
+- Troubleshooting: how to tell a bad USB port from a printer problem (`error -71`,
+  `libusb_bulk_transfer: Input/Output Error` in the ipp-usb log).
+
+## 0.2.2 — 2026-09-23
+
+- **Open with LinPrinter**: right-click a document in the file manager and choose Open With →
+  LinPrinter. `run.sh FILE…` opens the document on the Print page; the menu entry (installer and
+  package) now has `Exec=… %F` and `MimeType=` for PDF, PNG, JPEG, TIFF, BMP, GIF and text.
+- Tests for the command line and the menu entry's file types.
+
 ## 0.2.1 — 2026-09-22
 
 - Installer package: `dist/linprinter_0.2.1_all.deb` (+ `SHA256SUMS`), built by `tools/build-deb.sh`

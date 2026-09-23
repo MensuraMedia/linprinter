@@ -49,6 +49,8 @@ class PrintPage(BasePage):
         self.printers = []
         self.printer = None
         self.last_status = None
+        self.misses = 0  # failed status checks in a row (auto-reconnect)
+        self.last_reconnect = 0.0
         self._loading = False
         self.add_title("Print", "Choose a document and the options, then press Print.")
 
@@ -323,6 +325,8 @@ class PrintPage(BasePage):
             return
         if not printer.methods:
             self.show_power("error", printer.hint or "This printer can't be reached.")
+            self.misses += 1
+            self.maybe_reconnect(printer)
             return
 
         def done(status):
@@ -330,9 +334,46 @@ class PrintPage(BasePage):
             level, message = status[0], status[1]
             if self.printer is printer:
                 self.show_power(level, message)
+                self.misses = self.misses + 1 if level == "error" else 0
+                self.maybe_reconnect(printer)
             self.ctx.emit("printer-status", printer, status)
 
         self.ctx.printing.status_async(printer, done)
+
+    def maybe_reconnect(self, printer):
+        """The printer stopped answering: look for it again, quietly, now and then"""
+        import time
+
+        if not self.ctx.printing.should_reconnect(
+            "error" if self.misses else "ok",
+            self.misses,
+            time.monotonic() - self.last_reconnect,
+            self.ctx.printing.busy,
+            virtual=printer.virtual,
+        ):
+            return
+        self.last_reconnect = time.monotonic()
+        log.info("%s stopped answering (%d checks); searching again", printer.name, self.misses)
+        self.ctx.printing.refresh_printers(self.reconnected, lambda e: log.info("search failed: %s", e))
+
+    def reconnected(self, printers):
+        """A quiet search finished: keep the chosen printer selected; say so if it is back"""
+        chosen = self.printer_combo.get_active_id()
+        was_missing = self.printer is not None and not self.printer.methods
+        self.printers = printers
+        self.ctx.emit("printers-changed", printers)
+        self._loading = True
+        self.printer_combo.remove_all()
+        for p in printers:
+            self.printer_combo.append(p.id, p.label if p.methods else f"{p.name}  (can't print yet)")
+        self._loading = False
+        if not self.printer_combo.set_active_id(chosen):
+            self.printer_combo.set_active(0)
+        found = self.current_printer()
+        if found is not None and found.methods and (was_missing or self.misses):
+            self.misses = 0
+            self.set_status(f"{found.name} is back.", "status-ok")
+            self.check_status()
 
     def poll_status(self):
         """Every few seconds: refresh the power icon (not while printing, the job reports then)"""

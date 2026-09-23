@@ -57,6 +57,12 @@ def parse_args(argv):
         "--list-printers", action="store_true", help="print the printers LinPrinter can reach, then exit"
     )
     p.add_argument("--debug", action="store_true", help="verbose log (+ terminal)")
+    p.add_argument(
+        "files",
+        nargs="*",
+        metavar="FILE",
+        help="document to open (PDF, image or text) - used by 'Open with LinPrinter' in the file manager",
+    )
     return p.parse_args(argv)
 
 
@@ -115,7 +121,14 @@ def main(argv=None):
     window = AppWindow(ctx)
     window.connect("destroy", Gtk.main_quit)
     window.show_all()
-    ctx.nav.navigate_to(args.page)
+    ctx.nav.navigate_to("print" if args.files else args.page)
+    if args.files:
+        # "Open with LinPrinter": open the file once the window is up (printers load in parallel)
+        path = os.path.abspath(args.files[0])
+        if len(args.files) > 1:
+            log.info("%d files given; opening the first one (%s)", len(args.files), path)
+        log.info("opening %s from the command line", path)
+        GLib.idle_add(lambda: ctx.nav.get_page_widget("print").open_document(path) and False)
     if args.quit_after:
         GLib.timeout_add_seconds(args.quit_after, Gtk.main_quit)
     try:

@@ -11,11 +11,11 @@ USB-only privacy.
 
 | | |
 |---|---|
-| Version | 0.2.1 (see [changelog.md](changelog.md)) |
+| Version | 0.2.3 (see [changelog.md](changelog.md)) |
 | Verified printer | Canon TR150 series (USB, driverless) |
 | Platform | Linux desktop (Linux Mint 22 / Ubuntu 24.04 and other Debian-based systems), GTK 3, Python 3.10+ |
 | Connection | **USB cable only.** Wi-Fi and network printing are not supported at this time. |
-| Install | `bash install.sh` (runs from this folder), or the installer package [`dist/linprinter_0.2.1_all.deb`](dist/) (system-wide). Both work offline with the linux-peripherals package pool. |
+| Install | `bash install.sh` (runs from this folder), or the installer package [`dist/linprinter_0.2.3_all.deb`](dist/) (system-wide). Both work offline with the linux-peripherals package pool. |
 | Licence | [LinPrinter Community License (Noncommercial) 1.0](LICENSE): free to use, copy, modify and share; commercial use needs our written permission |
 
 ## Contents
@@ -38,8 +38,8 @@ USB-only privacy.
 
 | Area | What you get |
 |---|---|
-| **Detect Printer** | **Find**, the printer list, and a power mark: green when the printer is ready, amber when it needs attention, red when it's off or stopped. The message under it is plain, such as "Printer may be off. Check power settings." or "Load paper in the rear tray." LinPrinter remembers the printer, so the next start reaches it straight away. |
-| **Documents** | PDF, PNG, JPEG, TIFF (multi-page), BMP, GIF and plain text. Open one with **Open…** or drop it on the Print page. |
+| **Detect Printer** | **Find**, the printer list, and a power mark. If the printer stops answering (asleep, switched off and on, or a bad USB port), LinPrinter searches again by itself every 20 seconds and says "<printer> is back" - no need to press Find: green when the printer is ready, amber when it needs attention, red when it's off or stopped. The message under it is plain, such as "Printer may be off. Check power settings." or "Load paper in the rear tray." LinPrinter remembers the printer, so the next start reaches it straight away. |
+| **Documents** | PDF, PNG, JPEG, TIFF (multi-page), BMP, GIF and plain text. Open one with **Open…**, drop it on the Print page, or **right-click it in your file manager → Open With → LinPrinter**. |
 | **Print Options** | Copies · Color or Black & White · Draft / Normal / High · Pages (All, a range such as `1-3, 5`, Odd, Even, Current) · Paper Size (grouped: documents, photos, envelopes, cards) · Paper Type (plain, photo, glossy, matte, envelopes, Hagaki …) · Borderless · Fit to page or Actual size. **Only the options your printer really has are offered.** A line under the options says exactly what will print. |
 | **Preview** | The pages exactly as they will print: your paper, the printer's margins shaded, colour or grey, and pages turned to suit the paper. It has zoom, page navigation and 1- or 2-row thumbnails. |
 | **Queue** | Waiting, printing and finished jobs, with the pages done, the time sent and how each job was sent. **Cancel job** stops a waiting or printing one. |
@@ -117,7 +117,7 @@ for sudo only when something must be installed.
 
 | | Installer script (default) | Installer package |
 |---|---|---|
-| Command | `bash install.sh` | `bash install.sh --package`, or `sudo apt install ./dist/linprinter_0.2.1_all.deb` |
+| Command | `bash install.sh` | `bash install.sh --package`, or `sudo apt install ./dist/linprinter_0.2.3_all.deb` |
 | Installs to | runs from this folder | `/opt/linprinter`, command `linprinter` |
 | Menu entry | for you (`~/.local/share/applications`) | for every user |
 | Updates | `git pull` | install the new `.deb` |
@@ -153,7 +153,7 @@ This mode:
 - runs the same checks as the default install.
 
 You can also install the package directly with
-`sudo apt install ./dist/linprinter_0.2.1_all.deb`: apt fetches any missing
+`sudo apt install ./dist/linprinter_0.2.3_all.deb`: apt fetches any missing
 dependency. To rebuild the package after a change, run
 `bash tools/build-deb.sh`.
 
@@ -183,7 +183,8 @@ bash install.sh --uninstall   # removes the menu entry, icon and package (if ins
 1. Plug the printer in with its USB cable and switch it on. On the
    **Print** page, the power mark turns green and the printer is chosen for
    you. If the mark is red, check the cable and power, then press **Find**.
-2. **Open…** a document, or drop one on the page.
+2. **Open…** a document, drop one on the page, or right-click it in your file manager and choose
+   **Open With → LinPrinter** (that opens LinPrinter with the document ready to print).
 3. Choose the options. The line under them says what will print, for
    example "1 copy · Black & White · Normal · A4 (210 × 297 mm) · Plain paper
    · Fit to page · 3 page(s)".
@@ -261,6 +262,7 @@ maintenance**, then print the **line page** to check.
 ./run.sh --test-printer     built-in test printer + Print to PDF only (no hardware, nothing printed)
 ./run.sh --page printers    open on a page: print, preview, queue, recent, printers, settings, about
 ./run.sh --list-printers    list the printers LinPrinter can reach, then exit
+./run.sh FILE               open a document ready to print (what "Open With > LinPrinter" runs)
 ./run.sh --debug            verbose log, also in the terminal
 ./run.sh --version
 ```
@@ -269,7 +271,8 @@ maintenance**, then print the **line page** to check.
 
 | You see | Try |
 |---|---|
-| Red power mark, "Printer may be off. Check power settings." | Switch the printer on, check the USB cable, press **Find**. `systemctl status ipp-usb` should show it running while the printer is plugged in. |
+| Red power mark, "Printer may be off. Check power settings." | Switch the printer on, check the USB cable, press **Find** (LinPrinter also keeps looking by itself). `systemctl status ipp-usb` should show it running while the printer is plugged in. |
+| The connection keeps dropping; the printer has to be found again and again | Almost always the **USB port or cable**, not the printer. Check with `journalctl -k -b \| grep "usb .*error -71"`: if one port keeps appearing, move the printer to another port directly on the computer, and try another cable. `/var/log/ipp-usb/*.log` showing `libusb_bulk_transfer: Input/Output Error` is the same fault. |
 | "Load paper in the rear tray." | Load paper and print again. LinPrinter won't send the job another way while the printer needs you. |
 | "The printer stopped the job." | Check the printer's display or lights (jam, cover, ink), then print again. |
 | Streaks or faded colours | Print the **quality page** (Printers → Setup and test). If lines are broken, run cleaning from **Printer settings and maintenance**. |

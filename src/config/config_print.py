@@ -135,4 +135,8 @@ NETWORK_PRINTING = False
 
 # How often the printer's state is read (seconds)
 STATUS_EVERY = 5
+# Auto-reconnect: after this many failed status checks in a row, search again for the printer
+# (a printer that sleeps, is switched off and on, or sits on a flaky USB port comes back by itself)
+RECONNECT_AFTER_MISSES = 2
+RECONNECT_EVERY = 20  # seconds between those quiet searches
 STATUS_EVERY_WHILE_PRINTING = 1
