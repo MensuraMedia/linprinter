@@ -56,6 +56,11 @@ def parse_args(argv):
     p.add_argument(
         "--list-printers", action="store_true", help="print the printers LinPrinter can reach, then exit"
     )
+    p.add_argument(
+        "--reconnect",
+        action="store_true",
+        help="re-attach the remembered USB printer (plugged in but nothing sees it), then exit",
+    )
     p.add_argument("--debug", action="store_true", help="verbose log (+ terminal)")
     p.add_argument(
         "files",
@@ -94,6 +99,14 @@ def main(argv=None):
     else:
         settings = SettingsManager()
         printing = PrintManager(settings)
+
+    if args.reconnect:
+        ok, message = printing.reconnect_usb()
+        print(message)
+        printing.cleanup()
+        if test:
+            test.stop()
+        return 0 if ok else 1
 
     if args.list_printers:
         for p in printing.discover():

@@ -11,11 +11,11 @@ USB-only privacy.
 
 | | |
 |---|---|
-| Version | 0.2.4 (see [changelog.md](changelog.md)) |
+| Version | 0.2.5 (see [changelog.md](changelog.md)) |
 | Verified printer | Canon TR150 series (USB, driverless) |
 | Platform | Linux desktop (Linux Mint 22 / Ubuntu 24.04 and other Debian-based systems), GTK 3, Python 3.10+ |
 | Connection | **USB cable only.** Wi-Fi and network printing are not supported at this time. |
-| Install | `bash install.sh` (runs from this folder), or the installer package [`dist/linprinter_0.2.4_all.deb`](dist/) (system-wide). Both work offline with the linux-peripherals package pool. |
+| Install | `bash install.sh` (runs from this folder), or the installer package [`dist/linprinter_0.2.5_all.deb`](dist/) (system-wide). Both work offline with the linux-peripherals package pool. |
 | Licence | [LinPrinter Community License (Noncommercial) 1.0](LICENSE): free to use, copy, modify and share; commercial use needs our written permission |
 
 ## Contents
@@ -44,6 +44,7 @@ USB-only privacy.
 | **Preview** | The pages exactly as they will print: your paper, the printer's margins shaded, colour or grey, and pages turned to suit the paper. It zooms from a quarter size up to **16×** (Ctrl + wheel, or the buttons), with page navigation and 1- or 2-row thumbnails. Previews are rendered at 140 dpi, so zooming in shows real detail rather than a blur. |
 | **Queue** | Waiting, printing and finished jobs, with the pages done, the time sent and how each job was sent. **Cancel job** stops a waiting or printing one. |
 | **Recent** | Documents you've printed, newest first. The folder icon opens the folder; the document icon prints it again. Clear all entries, or those older than 5 / 10 / 20 / 30 days. |
+| **Reconnect** | When a printer is plugged in but nothing sees it (the kernel left it unconfigured), **Reconnect** re-attaches that one printer. It appears next to **Find** when the mark is red, and on the Printers page. See [section 6](#6-setting-up-and-testing-your-printer). |
 | **Printers Found** | Every printer and how LinPrinter reaches it, best way first. Also USB details, capabilities, firmware, **ink levels** drawn in the cartridges' own colours, and **Identify** (the printer flashes). |
 | **Setup and test** | The printer's own **defaults** (and **Use in LinPrinter**); a **quality test page** and a **line / alignment page**; and the printer's own **settings / maintenance** and **ink** pages (cleaning, nozzle check, alignment, quiet mode …). See [section 6](#6-setting-up-and-testing-your-printer). |
 | **Print to PDF** | Saves to `~/Documents/prints` (change it in Settings), with the same paper sizes and preview. No printer needed. |
@@ -117,7 +118,7 @@ for sudo only when something must be installed.
 
 | | Installer script (default) | Installer package |
 |---|---|---|
-| Command | `bash install.sh` | `bash install.sh --package`, or `sudo apt install ./dist/linprinter_0.2.4_all.deb` |
+| Command | `bash install.sh` | `bash install.sh --package`, or `sudo apt install ./dist/linprinter_0.2.5_all.deb` |
 | Installs to | runs from this folder | `/opt/linprinter`, command `linprinter` |
 | Menu entry | for you (`~/.local/share/applications`) | for every user |
 | Updates | `git pull` | install the new `.deb` |
@@ -153,7 +154,7 @@ This mode:
 - runs the same checks as the default install.
 
 You can also install the package directly with
-`sudo apt install ./dist/linprinter_0.2.4_all.deb`: apt fetches any missing
+`sudo apt install ./dist/linprinter_0.2.5_all.deb`: apt fetches any missing
 dependency. To rebuild the package after a change, run
 `bash tools/build-deb.sh`.
 
@@ -231,7 +232,24 @@ Open **Printers**. Each printer has a **Setup and test** section:
   other programs change those settings directly. (With the built-in test
   printer these buttons are greyed out.)
 - **Identify** makes the printer flash, and the **Ink** gauges show each
-  cartridge. **Ink alerts** warns before printing when one is low.
+  cartridge.
+- **Reconnect** re-attaches the printer when it's plugged in but nothing can see it - the state where
+  `lsusb` lists it yet it has no working interfaces, and ipp-usb keeps retrying "unable to find current
+  configuration". It appears on the Print page next to **Find** whenever a USB printer isn't answering.
+
+  **Why it asks for a password.** Printing doesn't need one: your user talks to ipp-usb, a system
+  service that already owns the printer. Re-attaching is different - it tells the *kernel* to detach and
+  re-attach a device, which is machine-wide, so only root may do it. LinPrinter never holds privileges:
+  it asks **pkexec**, which shows your desktop's own password dialog and runs a small helper that exits
+  immediately.
+
+  **It only ever touches that one printer.** The helper is given the printer's USB id, checks the port
+  still holds *that* device and that it is a printer (or an unconfigured device with the matching id),
+  and refuses anything else. Nothing else on USB is affected - your keyboard, drives and everything else
+  keep working. The printer's USB identity is remembered with the printer, so Reconnect also works after
+  a restart, or when the printer has been moved to another socket.
+
+  From a terminal: `./run.sh --reconnect`. **Ink alerts** warns before printing when one is low.
 
 A good routine: when prints look streaky or faded, print the **quality
 page**. If lines are broken, run cleaning from **Printer settings and

@@ -138,6 +138,18 @@ fi
 
 fi  # per-user install
 
+step "Reconnect helper (re-attach the printer without a terminal)"
+HELPER=/usr/local/lib/linprinter/linprinter-usb-reset
+POLICY=/usr/share/polkit-1/actions/io.mensuramedia.linprinter.usb-reset.policy
+if cmp -s "$APP_DIR/tools/system/linprinter-usb-reset" "$HELPER" && cmp -s "$APP_DIR/tools/system/io.mensuramedia.linprinter.usb-reset.policy" "$POLICY"; then
+    ok "Reconnect helper installed ($HELPER)"
+elif sudo install -Dm755 "$APP_DIR/tools/system/linprinter-usb-reset" "$HELPER" \
+     && sudo install -Dm644 "$APP_DIR/tools/system/io.mensuramedia.linprinter.usb-reset.policy" "$POLICY"; then
+    fixed "Installed the Reconnect helper ($HELPER) - the app asks for your password when you use it"
+else
+    fail "Could not install the Reconnect helper (LinPrinter will fall back to a plain pkexec prompt)"
+fi
+
 step "Verifying"
 VER=$("$RUN" --version 2>/dev/null)
 [[ "${VER,,}" == linprinter* ]] && ok "App starts: $VER" || fail "App did not start: run $RUN to see the error"

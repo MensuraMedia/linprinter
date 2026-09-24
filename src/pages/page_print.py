@@ -85,6 +85,14 @@ class PrintPage(BasePage):
         box.pack_start(printers_btn, False, False, 0)
         row.pack_start(half(box), True, True, 0)
         card.pack_start(row, False, False, 0)
+        self.reconnect_btn = Gtk.Button(label="Reconnect")
+        self.reconnect_btn.set_tooltip_text(
+            "The printer is plugged in but not answering: re-attach it to the computer "
+            "(asks for your password)"
+        )
+        self.reconnect_btn.set_no_show_all(True)
+        self.reconnect_btn.connect("clicked", lambda *_: self.on_reconnect())
+        row.pack_start(self.reconnect_btn, False, False, 0)
         self.printer_message = self.label("", "status-error", wrap=True)
         self.printer_message.set_no_show_all(True)  # a problem with the printer, in plain words
         card.pack_start(self.printer_message, False, False, 0)
@@ -246,6 +254,25 @@ class PrintPage(BasePage):
         self.mark.set_visible_child_name("looking")
         self.printer_message.hide()
 
+    def on_reconnect(self):
+        """Re-attach the printer's USB device (password prompt), then look again"""
+        self.reconnect_btn.set_sensitive(False)
+        self.set_status("Re-attaching the printer…")
+
+        def done(result):
+            ok, text = result
+            self.reconnect_btn.set_sensitive(True)
+            self.set_status(text, "status-ok" if ok else "status-error")
+            if ok:
+                self.misses = 0
+                self.refresh_printers()
+
+        def failed(message):
+            self.reconnect_btn.set_sensitive(True)
+            self.set_status(message, "status-error")
+
+        self.ctx.printing._in_thread(lambda: self.ctx.printing.reconnect_usb(self.printer), done, failed)
+
     def show_power(self, level, message):
         """Green / amber / red power icon; the message under the list unless all is well"""
         self.spinner.stop()
@@ -259,6 +286,9 @@ class PrintPage(BasePage):
         ctx = self.printer_message.get_style_context()
         ctx.remove_class("status-error" if level == "warn" else "status-busy")
         ctx.add_class("status-busy" if level == "warn" else "status-error")
+        # offer Reconnect only when a USB printer we know about isn't answering
+        known = bool(self.ctx.printing.remembered_usb()) or bool(self.printer and self.printer.usb)
+        self.reconnect_btn.set_visible(level == "error" and known)
 
     def startup(self):
         """At start: reach the remembered printer directly; otherwise search"""

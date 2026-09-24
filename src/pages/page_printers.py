@@ -120,6 +120,14 @@ class PrintersPage(BasePage):
             "Checking…" if p.methods else p.hint, "muted" if p.methods else "status-error", wrap=True
         )
         self.status_labels[p.id] = status
+        if p.usb and p.usb.port_path:
+            rec = Gtk.Button(label="Reconnect")
+            rec.set_tooltip_text(
+                "Re-attach the printer to the computer (asks for your password) - "
+                "use this when it is plugged in but nothing sees it"
+            )
+            rec.connect("clicked", lambda _b, p=p, s=status: self.reconnect(p, s))
+            row.pack_start(rec, False, False, 0)
         if p.caps and p.caps.identify:
             ident = Gtk.Button(label="Identify")
             ident.set_tooltip_text("Make the printer flash so you can see which one it is")
@@ -412,6 +420,22 @@ class PrintersPage(BasePage):
                 row.pack_start(self.label(level_text, "info-value"), False, False, 0)
                 box.pack_start(row, False, False, 0)
             box.show_all()
+
+    def reconnect(self, printer, label):
+        """Re-attach the printer's USB device, then look for printers again"""
+        label.get_style_context().remove_class("status-error")
+        label.set_text("Re-attaching the printer…")
+
+        def done(result):
+            ok, message = result
+            label.get_style_context().add_class("status-ok" if ok else "status-error")
+            label.set_text(message)
+            if ok:
+                self.ctx.emit("request-printer-refresh")
+
+        self.ctx.printing._in_thread(
+            lambda: self.ctx.printing.reconnect_usb(printer), done, lambda e: label.set_text(str(e))
+        )
 
     def identify(self, printer, label):
         """Make the printer flash"""

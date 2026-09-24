@@ -76,5 +76,11 @@
     "version": "0.2.4",
     "type": "feat",
     "summary": "Zoom up to 16x; previews at 140 dpi; deep zoom enlarges (capped at 40 Mpx)"
+  },
+  {
+    "time": "2026-09-23T21:23:06Z",
+    "version": "0.2.5",
+    "type": "feat",
+    "summary": "Reconnect button re-attaches one verified USB printer via pkexec; USB identity remembered"
   }
 ]

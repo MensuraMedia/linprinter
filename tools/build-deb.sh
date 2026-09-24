@@ -51,6 +51,10 @@ MimeType=application/pdf;image/png;image/jpeg;image/tiff;image/bmp;image/gif;tex
 Keywords=print;printer;pdf;ink;cups;test page;
 EOF
 
+install -Dm755 "$APP_DIR/tools/system/linprinter-usb-reset" "$ROOT/usr/local/lib/linprinter/linprinter-usb-reset"
+install -Dm644 "$APP_DIR/tools/system/io.mensuramedia.linprinter.usb-reset.policy" \
+    "$ROOT/usr/share/polkit-1/actions/io.mensuramedia.linprinter.usb-reset.policy"
+
 cp "$APP_DIR/resources/images/logo.png" "$ROOT/usr/share/icons/hicolor/512x512/apps/linprinter.png"
 cp "$APP_DIR/LICENSE" "$ROOT/usr/share/doc/linprinter/copyright"
 gzip -9n < "$APP_DIR/changelog.md" > "$ROOT/usr/share/doc/linprinter/changelog.gz"
@@ -58,7 +62,8 @@ gzip -9n < "$APP_DIR/changelog.md" > "$ROOT/usr/share/doc/linprinter/changelog.g
 # permissions: directories 755, files 644, executables 755
 find "$ROOT" -type d -exec chmod 755 {} +
 find "$ROOT" -type f -exec chmod 644 {} +
-chmod 755 "$ROOT/usr/bin/linprinter" "$ROOT/opt/linprinter/run.sh"
+chmod 755 "$ROOT/usr/bin/linprinter" "$ROOT/opt/linprinter/run.sh" \
+    "$ROOT/usr/local/lib/linprinter/linprinter-usb-reset"
 
 SIZE="$(du -sk --exclude=DEBIAN "$ROOT" | cut -f1)"
 cat > "$ROOT/DEBIAN/control" <<EOF

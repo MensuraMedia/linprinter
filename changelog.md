@@ -2,6 +2,20 @@
 
 All notable changes to LinPrinter. Semantic versioning; newest first.
 
+## 0.2.5 — 2026-09-23
+
+- **Reconnect**: re-attaches a printer that is plugged in but left unconfigured by the kernel (the
+  "nothing sees it" state). A button next to **Find** when the mark is red, one per printer on the
+  Printers page, and `run.sh --reconnect`.
+  - Asks for the password through pkexec (the desktop's own dialog); no privileges are kept.
+  - Touches exactly one device: the helper verifies the port still holds that printer (USB id) and
+    that it is a printer, and refuses anything else, including an unrelated device that took the port.
+  - The printer's USB identity (id and port) is remembered with the printer, so Reconnect works after a
+    restart and follows the printer to another socket.
+  - Installed by `install.sh` and the package: `/usr/local/lib/linprinter/linprinter-usb-reset` plus its
+    polkit action. Without them, a plain pkexec prompt is used instead.
+- tests/test_usb_reset.py: identity checks, refusals, moved printer, in-place reset.
+
 ## 0.2.4 — 2026-09-23
 
 - **Zoom further into documents**: the maximum goes from 8× to **16×** (steps unchanged), previews are

@@ -191,6 +191,26 @@ class PrintManager:
         """Find printers in the background"""
         self._in_thread(self.discover, on_done, on_error)
 
+    def remembered_usb(self):
+        """{"id", "port"} of the last USB printer used ({} if none) - for Reconnect"""
+        return (self.settings.get("last_printer_info") or {}).get("usb") or {}
+
+    def reconnect_usb(self, printer=None):
+        """Re-attach the chosen printer (or the remembered one) on USB: (ok, message)"""
+        from backends.usb_reset import reset
+
+        usb = self.remembered_usb()
+        port = printer.usb.port_path if printer is not None and printer.usb else usb.get("port", "")
+        usb_id = printer.usb.usb_id if printer is not None and printer.usb else usb.get("id", "")
+        if not usb_id and not port:  # nothing remembered yet: take a printer that is plugged in now
+            from backends.usb_probe import likely_printers, probe
+
+            found = next(iter(likely_printers(probe())), None)
+            if found is None:
+                return False, "No USB printer found, so there is nothing to re-attach."
+            port, usb_id = found.port_path, found.usb_id
+        return reset(port, usb_id)
+
     def printer(self, printer_id):
         """A printer by id (None if unknown)"""
         return next((p for p in self.printers if p.id == printer_id), None)
@@ -204,6 +224,8 @@ class PrintManager:
             "name": printer.name,
             "methods": [{"code": m.code, "target": m.target} for m in printer.methods],
         }
+        if printer.usb:  # so Reconnect works even when the printer has dropped off or after a restart
+            info["usb"] = {"id": printer.usb.usb_id, "port": printer.usb.port_path}
         if info != self.settings.get("last_printer_info"):
             self.settings.set("last_printer_info", info)
 

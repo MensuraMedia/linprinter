@@ -1,0 +1,52 @@
+#!/bin/sh
+# linprinter-usb-reset — re-attach ONE USB printer to this computer.
+#
+# Run through pkexec by LinPrinter's Reconnect button (see the polkit action
+# io.mensuramedia.linprinter.usb-reset). It is deliberately narrow:
+#
+#   * it touches exactly one device: /sys/bus/usb/devices/<port>/authorized
+#   * it refuses anything that is not a USB printer (interface class 07),
+#     unless the device is unconfigured (no interfaces at all - the very state
+#     this repairs), in which case the expected USB id must match
+#   * it changes nothing else, starts nothing, and exits immediately
+#
+# Usage: linprinter-usb-reset <port> [vvvv:pppp]      e.g. linprinter-usb-reset 3-4 04a9:18a4
+set -eu
+
+port="${1:?usage: linprinter-usb-reset <port> [vvvv:pppp]}"
+want="${2:-}"
+case "$port" in
+    *[!0-9.-]*|"") echo "linprinter-usb-reset: not a USB port: $port" >&2; exit 2 ;;
+esac
+
+base="/sys/bus/usb/devices/$port"
+[ -d "$base" ] || { echo "linprinter-usb-reset: nothing plugged into $port" >&2; exit 2; }
+
+found="$(cat "$base/idVendor" 2>/dev/null):$(cat "$base/idProduct" 2>/dev/null)"
+if [ -n "$want" ] && [ "$want" != "$found" ]; then
+    echo "linprinter-usb-reset: $port holds $found, not $want - refusing" >&2
+    exit 3
+fi
+
+is_printer=no
+has_iface=no
+for iface in "$base/$port":*; do
+    [ -d "$iface" ] || continue
+    has_iface=yes
+    [ "$(cat "$iface/bInterfaceClass" 2>/dev/null)" = "07" ] && is_printer=yes
+done
+if [ "$is_printer" = no ] && [ "$has_iface" = yes ]; then
+    echo "linprinter-usb-reset: $port is not a printer - refusing" >&2
+    exit 3
+fi
+if [ "$is_printer" = no ] && [ -z "$want" ]; then
+    echo "linprinter-usb-reset: $port has no configuration and no USB id was given - refusing" >&2
+    exit 3
+fi
+
+[ -w "$base/authorized" ] || { echo "linprinter-usb-reset: $base/authorized is not writable (run through pkexec)" >&2; exit 2; }
+
+printf 0 > "$base/authorized"
+sleep 2
+printf 1 > "$base/authorized"
+echo "re-attached $found on $port"
