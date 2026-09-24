@@ -60,6 +60,30 @@ def generic_capabilities():
     return caps
 
 
+def ipp_usb_installed():
+    """True when ipp-usb is installed (it lives in sbin, which is not always on PATH)"""
+    return any(
+        os.path.exists(p)
+        for p in ("/usr/sbin/ipp-usb", "/sbin/ipp-usb", "/usr/lib/systemd/system/ipp-usb.service")
+    )
+
+
+def unusable_hint(dev):
+    """Why a connected USB printer can't be printed to yet, and what to do about it"""
+    if "ipp-usb" in dev.kinds:
+        if ipp_usb_installed():
+            return (
+                "This printer is connected and speaks driverless IPP, but the ipp-usb service "
+                "isn't answering for it. Press Reconnect to re-attach it (it can also be woken by "
+                "unplugging the printer and plugging it back in)."
+            )
+        return (
+            "This printer is connected, but nothing answers for it yet. It can print "
+            "driverless through ipp-usb (sudo apt install ipp-usb)."
+        )
+    return "This printer is connected but has no CUPS queue. Add it in the system's Printers settings."
+
+
 class PrintManager:
     """Printers, document, tickets, jobs"""
 
@@ -161,12 +185,7 @@ class PrintManager:
                 if match:
                     match.usb = dev
                 else:
-                    hint = (
-                        "This printer is connected, but nothing answers for it yet. It can print "
-                        "driverless through ipp-usb (sudo apt install ipp-usb)."
-                        if "ipp-usb" in dev.kinds
-                        else "This printer is connected but has no CUPS queue. Add it in the system's Printers settings."
-                    )
+                    hint = unusable_hint(dev)
                     printers.append(
                         PrinterDevice(key=f"usb:{dev.usb_id}", name=label or dev.usb_id, usb=dev, hint=hint)
                     )

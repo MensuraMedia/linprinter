@@ -4,6 +4,13 @@ Driver-independent USB facts for printer detection, read straight from sysfs
 and the udev database (no subprocesses, no root):
 identity, speed, interface classes (7 = printer; 7/1/4 = IPP-over-USB),
 the kernel driver in use (usblp) and device-node access.
+
+sysfs shows only each interface's *current* alternate setting, and printers
+routinely hide IPP-over-USB on an alternate setting (the Canon TR150 offers
+7/1/4 on alt 1 of interfaces 1 and 2, while alt 0 is vendor-specific). The
+device's raw descriptor blob (`descriptors`, world-readable) lists every
+alternate setting, so it is parsed too - otherwise a driverless printer looks
+like a plain USB printer and gets the wrong advice.
 """
 
 import glob
@@ -27,6 +34,7 @@ class UsbDevice:
     speed_mbps: int
     port_path: str  # e.g. "3-5"
     interfaces: list = field(default_factory=list)  # [(class, subclass, protocol, driver)]
+    alt_interfaces: list = field(default_factory=list)  # [(class, subclass, protocol)] incl. alt settings
     node: str = ""  # /dev/bus/usb/BBB/DDD
     accessible: bool = False  # current user can open the node read/write
     vendor_db: str = ""  # usb.ids vendor name from udev
@@ -37,10 +45,12 @@ class UsbDevice:
         return f"{self.vid}:{self.pid}"
 
     def has_class(self, cls, sub=None, proto=None):
-        """True if any interface matches the class (and optional subclass/protocol)"""
+        """True if any interface matches the class (and optional subclass/protocol).
+
+        Alternate settings count: that is where printers keep IPP-over-USB."""
+        every = [i[:3] for i in self.interfaces] + list(self.alt_interfaces)
         return any(
-            c == cls and (sub is None or s == sub) and (proto is None or p == proto)
-            for c, s, p, _ in self.interfaces
+            c == cls and (sub is None or s == sub) and (proto is None or p == proto) for c, s, p in every
         )
 
     @property
@@ -78,6 +88,27 @@ def _udev_properties(sys_path):
                 key, value = line[2:].split("=", 1)
                 props[key] = value
     return props
+
+
+def descriptor_interfaces(sys_path):
+    """(class, subclass, protocol) of every interface descriptor, alternate settings included.
+
+    The blob is a plain sequence of descriptors: bLength, bDescriptorType, then the
+    body. Interface descriptors are type 0x04 and 9 bytes long."""
+    try:
+        with open(os.path.join(sys_path, "descriptors"), "rb") as f:
+            blob = f.read()
+    except OSError:
+        return []
+    found, i = [], 0
+    while i + 1 < len(blob):
+        length = blob[i]
+        if length < 2:  # a zero length would loop forever
+            break
+        if blob[i + 1] == 0x04 and length >= 9 and i + 9 <= len(blob):
+            found.append((blob[i + 5], blob[i + 6], blob[i + 7]))
+        i += length
+    return found
 
 
 def probe(sys_root=SYS_USB):
@@ -119,6 +150,7 @@ def probe(sys_root=SYS_USB):
                 speed_mbps=speed,
                 port_path=base,
                 interfaces=interfaces,
+                alt_interfaces=descriptor_interfaces(path),
                 node=node,
                 accessible=os.access(node, os.R_OK | os.W_OK),
                 vendor_db=props.get("ID_VENDOR_FROM_DATABASE", ""),

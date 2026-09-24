@@ -82,5 +82,11 @@
     "version": "0.2.5",
     "type": "feat",
     "summary": "Reconnect button re-attaches one verified USB printer via pkexec; USB identity remembered"
+  },
+  {
+    "time": "2026-09-24T03:55:09Z",
+    "version": "0.2.6",
+    "type": "fix",
+    "summary": "A cut-short IPP answer is reported, not crashed (struct.error took down status checks); attributes fall back to the essential request so losing media-col-database costs only borderless combinations; the USB probe reads alternate settings from the descriptor blob, so a driverless printer (Canon TR150: 7/1/4 on alt 1) is recognised; the unusable-printer hint depends on whether ipp-usb is installed; --list-printers no longer hides a printer with no working method. 64 tests."
   }
 ]

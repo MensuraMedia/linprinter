@@ -112,6 +112,8 @@ def main(argv=None):
         for p in printing.discover():
             if p.methods:
                 print(f"{p.name}\t{', '.join(m.label for m in p.methods)}")
+            else:  # connected but nothing can print to it yet: say so, don't hide it
+                print(f"{p.name}\tnot ready — {p.hint}")
         printing.cleanup()
         if test:
             test.stop()

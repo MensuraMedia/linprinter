@@ -9,8 +9,11 @@ it needs root. LinPrinter never holds privileges itself: it asks pkexec, which
 shows the desktop's own password dialog, runs the small helper the installer
 places in /usr/local/lib/linprinter, and exits. Nothing is left running.
 
-If the installer's udev rule is in place, the device's `authorized` file is
-writable by your user and no password is asked at all.
+If something has already made the device's `authorized` file writable by your
+user (a udev rule of your own, for example), it is re-attached in place and no
+password is asked. LinPrinter's installer does not add such a rule: granting a
+user permanent control over a device's USB attachment is a system-wide decision
+that belongs to whoever administers the machine, not to an app installer.
 """
 
 import glob
@@ -87,7 +90,7 @@ def configured(port_path, sys_usb=SYS_USB):
 
 
 def writable(port_path, sys_usb=SYS_USB):
-    """True when this user may re-attach the device without a password (udev rule)"""
+    """True when this user may re-attach the device without a password (permissions allow it)"""
     return os.access(os.path.join(sysfs_path(port_path, sys_usb), "authorized"), os.W_OK)
 
 
@@ -134,7 +137,7 @@ def reset(port_path, usb_id="", sys_usb=SYS_USB):
                 with open(auth, "w") as f:
                     f.write(value)
                 time.sleep(2)
-            log.info("re-attached %s without a password (udev rule)", port_path)
+            log.info("re-attached %s in place (authorized is writable, no password needed)", port_path)
         except OSError as e:
             return False, f"Could not re-attach the printer: {e}"
     elif shutil.which("pkexec"):

@@ -19,6 +19,10 @@ import struct
 import urllib.parse
 from collections import OrderedDict
 
+from utils.util_logging import get_logger
+
+log = get_logger("ipp")
+
 # -- tags (RFC 8010 §3.5) ------------------------------------------------------
 OPERATION, JOB, END, PRINTER, UNSUPPORTED_GROUP = 0x01, 0x02, 0x03, 0x04, 0x05
 GROUP_TAGS = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
@@ -65,6 +69,12 @@ JOB_STATES = {
 }
 PRINTER_STATES = {3: "idle", 4: "processing", 5: "stopped"}
 QUALITY = {"draft": 3, "normal": 4, "high": 5}
+
+
+TRUNCATED = (
+    "The printer's answer was cut short (the USB link dropped it mid-message). "
+    "Try again; if it keeps happening, re-attach the printer with Reconnect."
+)
 
 
 class IppError(Exception):
@@ -183,14 +193,28 @@ class _Multi(list):
     _multi = True
 
 
+def _short(data, pos, need):
+    """True when the answer stops before `need` more bytes (a cut-short response)"""
+    return pos + need > len(data)
+
+
+def _read_length(data, pos):
+    """A 2-byte length at pos; raises IppError rather than struct.error when it isn't there"""
+    if _short(data, pos, 2):
+        raise IppError(TRUNCATED, code="error")
+    return struct.unpack(">h", data[pos : pos + 2])[0]
+
+
 def _read_collection(data, pos):
     """Decode collection members after a begCollection value; returns (dict, new position)"""
     result, member = OrderedDict(), None
     while pos < len(data):
         tag = data[pos]
-        nlen = struct.unpack(">h", data[pos + 1 : pos + 3])[0]
+        nlen = _read_length(data, pos + 1)
         pos += 3 + nlen
-        vlen = struct.unpack(">h", data[pos : pos + 2])[0]
+        vlen = _read_length(data, pos)
+        if _short(data, pos + 2, vlen):
+            raise IppError(TRUNCATED, code="error")
         value = data[pos + 2 : pos + 2 + vlen]
         pos += 2 + vlen
         if tag == END_COLLECTION:
@@ -203,7 +227,7 @@ def _read_collection(data, pos):
             _add(result, member, sub)
         else:
             _add(result, member, _decode_value(tag, value))
-    return result, pos
+    raise IppError(TRUNCATED, code="error")  # ran out before end-of-collection
 
 
 def decode_message(data):
@@ -212,19 +236,25 @@ def decode_message(data):
         raise IppError("The printer sent an empty or short answer.", code="error")
     _major, _minor, code, request_id = struct.unpack(">bbhi", data[:8])
     pos, groups, current, last = 8, [], None, None
+    complete = False
     while pos < len(data):
         tag = data[pos]
         if tag in GROUP_TAGS:
             pos += 1
             if tag == END:
+                complete = True
                 break
             current = OrderedDict()
             groups.append((tag, current))
             continue
-        nlen = struct.unpack(">h", data[pos + 1 : pos + 3])[0]
+        nlen = _read_length(data, pos + 1)
+        if _short(data, pos + 3, nlen):
+            raise IppError(TRUNCATED, code="error")
         name = data[pos + 3 : pos + 3 + nlen].decode("utf-8", "replace")
         pos += 3 + nlen
-        vlen = struct.unpack(">h", data[pos : pos + 2])[0]
+        vlen = _read_length(data, pos)
+        if _short(data, pos + 2, vlen):
+            raise IppError(TRUNCATED, code="error")
         value = data[pos + 2 : pos + 2 + vlen]
         pos += 2 + vlen
         if nlen:
@@ -236,6 +266,10 @@ def decode_message(data):
             _add(current, last, coll)
         else:
             _add(current, last, _decode_value(tag, value))
+    if not complete:
+        # the answer stopped at an attribute boundary: what we have looks whole but
+        # isn't, and a half-read printer would be reported as one with no paper sizes
+        raise IppError(TRUNCATED, code="error")
     return code, request_id, groups
 
 
@@ -346,8 +380,30 @@ class IppClient:
                 out.update(attrs)
         return out
 
-    def get_printer_attributes(self, requested=("all", "media-col-database")):
-        """All printer attributes as {name: value}"""
+    def get_printer_attributes(self, requested=("all",), extra=("media-col-database",)):
+        """All printer attributes as {name: value}.
+
+        Asking for everything at once gets the fullest answer - Canon's IPP returns
+        more when `media-col-database` is named than for a plain "all" - so that is
+        tried first. But the reply is large (~119 KB on a Canon TR150) and a shaky USB
+        link can drop it mid-message, which would otherwise leave the printer looking
+        unreachable. So a cut-short answer falls back to the small essential request,
+        and the big extra is then asked for on its own: if that fails too, only the
+        borderless paper combinations are missing and the printer stays usable."""
+        try:
+            return self._attributes(tuple(requested) + tuple(extra))
+        except IppError as e:
+            log.info("the full attribute request failed (%s); asking for less", e)
+        attrs = self._attributes(requested)  # the essentials: this one may raise
+        for name in extra:
+            try:
+                attrs.update(self._attributes((name,)))
+            except IppError as e:
+                log.info("%s not read (%s); continuing without it", name, e)
+        return attrs
+
+    def _attributes(self, requested):
+        """One Get-Printer-Attributes request"""
         ops = _base_operation_attrs(self.uri) + [("requested-attributes", KEYWORD, list(requested))]
         status, groups = self.request(GET_PRINTER_ATTRIBUTES, [(OPERATION, ops)])
         self._ok(GET_PRINTER_ATTRIBUTES, status, groups)

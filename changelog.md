@@ -2,6 +2,32 @@
 
 All notable changes to LinPrinter. Semantic versioning; newest first.
 
+## 0.2.6 — 2026-09-23
+
+- **A cut-short answer is an error, not a crash.** When the USB link drops an IPP reply mid-message
+  (`libusb_bulk_transfer: Input/Output Error` in the ipp-usb log), the decoder used to read a length
+  field that wasn't there and raise `struct.error`, which nothing catches: a status check took the app
+  down instead of reporting that the printer had stopped answering. Every length and value is now
+  bounds-checked, and a reply that ends without its end-of-attributes tag is refused rather than
+  returned as if whole - a half-read printer used to look like a printer with no paper sizes.
+- **One lost extra no longer costs the printer.** Attributes are still asked for in one go (Canon
+  answers a named `media-col-database` more fully than a plain "all"), but a cut-short reply now falls
+  back to the small essential request and asks for the big extra separately. If only the extra fails,
+  the printer keeps working and just has no borderless paper combinations.
+- **Driverless printers hidden on an alternate setting are found.** sysfs shows only an interface's
+  current alternate setting, and the Canon TR150 keeps IPP-over-USB (7/1/4) on alternate setting 1 of
+  interfaces 1 and 2 while alternate setting 0 is vendor-specific. The probe now also parses the
+  device's raw `descriptors` blob (world-readable, no root, no new dependency), so such a printer is
+  no longer filed as a plain USB printer.
+- **Honest advice when a printer can't be used yet.** A driverless printer on a system that *has*
+  ipp-usb is now told the service isn't answering for it and pointed at Reconnect; only a system
+  without ipp-usb gets the `apt install` line. A printer with no driverless interface still gets the
+  CUPS-queue advice.
+- `--list-printers` no longer hides a connected printer that has no working method - exactly the
+  printer worth asking about. It prints `<name>  not ready — <reason>`.
+- Corrected the Reconnect docstring: the installer adds no udev rule, deliberately.
+- 64 tests (10 new).
+
 ## 0.2.5 — 2026-09-23
 
 - **Reconnect**: re-attaches a printer that is plugged in but left unconfigured by the kernel (the
