@@ -82,7 +82,7 @@ Description: document printer for USB printers (driverless IPP, CUPS, Print to P
  ink levels, prints test pages, opens the printer's maintenance page and prints
  to PDF. USB only: no network discovery, no telemetry.
  .
- Licence: LinPrinter Community License (Noncommercial) 1.0.
+ Licence: Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0).
 EOF
 ( cd "$ROOT" && find . -path ./DEBIAN -prune -o -type f -printf '%P\0' | sort -z | xargs -0 md5sum ) > "$ROOT/DEBIAN/md5sums"
 chmod 644 "$ROOT/DEBIAN/control" "$ROOT/DEBIAN/md5sums"

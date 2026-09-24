@@ -88,5 +88,11 @@
     "version": "0.2.6",
     "type": "fix",
     "summary": "A cut-short IPP answer is reported, not crashed (struct.error took down status checks); attributes fall back to the essential request so losing media-col-database costs only borderless combinations; the USB probe reads alternate settings from the descriptor blob, so a driverless printer (Canon TR150: 7/1/4 on alt 1) is recognised; the unusable-printer hint depends on whether ipp-usb is installed; --list-printers no longer hides a printer with no working method. 64 tests."
+  },
+  {
+    "time": "2026-09-24T05:50:45Z",
+    "version": "0.2.7",
+    "type": "chore",
+    "summary": "Licence changed to Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0), replacing the bespoke community licence; LICENSE carries the full legal code; README, About page, package description and docs updated; not retroactive."
   }
 ]

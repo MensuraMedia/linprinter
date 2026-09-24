@@ -102,11 +102,13 @@ class AboutPage(BasePage):
         card = self.add_card("Licence")
         self._text(
             card,
-            "LinPrinter Community License (Noncommercial) 1.0. You're welcome to use it free of charge, and to "
-            "copy, modify and share it for any noncommercial purpose. Commercial use needs written permission "
-            "from MensuraMedia; we're happy to talk. The components LinPrinter builds on keep their own licences.",
+            "Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0). You're welcome to "
+            "use it free of charge, and to share and adapt it for any noncommercial purpose, with credit and a "
+            "link to the licence. Commercial use needs written permission from MensuraMedia; we're happy to "
+            "talk. The components LinPrinter builds on keep their own licences.",
         )
         self._text(card, f"Full text: {tilde(os.path.join(APP_ROOT, 'LICENSE'))}", "muted", selectable=True)
+        self._text(card, "https://creativecommons.org/licenses/by-nc/4.0/", "muted", selectable=True)
 
         card = self.add_card("Your files")
         self._grid(

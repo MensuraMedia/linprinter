@@ -2,6 +2,18 @@
 
 All notable changes to LinPrinter. Semantic versioning; newest first.
 
+## 0.2.7 — 2026-09-24
+
+- **Licence changed to Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**,
+  replacing the bespoke LinPrinter Community License (Noncommercial) 1.0. `LICENSE` carries a
+  plain-language summary followed by the full official legal code; the README, the About page, the
+  package description and the docs follow. Free to use, share and adapt for any noncommercial purpose
+  with credit and a link to the licence; commercial use still needs written permission from
+  MensuraMedia. The change is **not retroactive** — copies released earlier keep the terms they came
+  with.
+- tests/test_licence.py guards it: the licence names CC BY-NC 4.0, ships the full legal code rather
+  than only the deed summary, keeps the copyright line, and no longer mentions the old licence.
+
 ## 0.2.6 — 2026-09-23
 
 - **A cut-short answer is an error, not a crash.** When the USB link drops an IPP reply mid-message
