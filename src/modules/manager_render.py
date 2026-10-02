@@ -158,10 +158,10 @@ def select_pages(choice, count, text="", current=1):
                 pages.append(int(part))
             else:
                 raise RenderError(
-                    f'"{part}" isn\'t a page range. Use numbers like 1-3, 5 (pages 1 to {count}).'
+                    f'"{part}" isn\'t a page. Use a page like 2, or pages like 1-3, 5 (pages 1 to {count}).'
                 )
         if not pages:
-            raise RenderError(f"No pages in that range (the document has {count}).")
+            raise RenderError(f"None of those pages are in the document (it has {count}).")
         return pages
     return list(range(1, count + 1))
 

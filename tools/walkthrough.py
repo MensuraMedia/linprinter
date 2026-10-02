@@ -188,6 +188,11 @@ def main():
     page.range_entry.set_text("1-2")
     pump(2.5)
     shot(window, "02b-print-more-options")
+    page.range_entry.set_text("9-12")  # not in a 3-page document
+    pump(1)
+    shot(window, "02d-page-list-check-it")
+    page.range_entry.set_text("1-2")
+    pump(1.5)
     adj = page.left.get_vadjustment()
     adj.set_value(adj.get_upper() - adj.get_page_size())  # Which, Fit and Profile
     pump(1)

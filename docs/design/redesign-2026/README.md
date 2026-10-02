@@ -31,5 +31,9 @@ The approved design that 0.3.0 implements, and what the design adversary checks 
 | Link test: 200 USB control reads | 20 small IPP questions | Needs no password; the USB-level test stays a tool (`tools/usb_linktest.py`) |
 | Thumbnails as numbered boxes | Real page thumbnails | The real preview already renders them |
 | "Remove queue" removes it | Shows and copies the command | Removing a system queue needs the administrator; LinPrinter never holds privileges |
+| Output segments hug their labels | Every Output control fills the field column, equal segments; the stepper keeps compact −/+ | The user asked for uniform buttons (2026-10-02) |
+| "up to 99" beside the stepper | A caption under the "Copies" label (also the tooltip) | Beside it, the stepper couldn't share the column's width |
+| Pages "Range", row "Range" / "Page range" | Pages "Custom", row "Page list"; the page count is a caption under the label | The user asked for "custom page print (a specific page or number of pages)"; the box spans the column like the rest |
+| Dropdowns follow GTK's default | Dropdowns ignore the mouse wheel; it scrolls the page | The user asked that scrolling never changes a dropdown |
 
 Sources: the LinPrinter GUI Guide and Design Reference and the redesign mockups (claude.ai, 2026-10-02).

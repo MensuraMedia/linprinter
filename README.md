@@ -42,7 +42,7 @@ to open Printer. One look throughout: the Graphite Night theme, shared with the 
 
 | Area | What you get |
 |---|---|
-| **Print** | Four cards: **Printer** (its state in words, with the fix in place when it needs you), **Document**, **Paper** (size grouped, type, borderless where possible), **Output** (copies, colour, quality, pages: all, a range such as `1-3, 5` or `3 to 5`, current). **More options** adds odd/even pages, fit or actual size, and profiles. The **live preview** sits beside the options: your paper, the printer's margins shaded, zoom up to 16×, page thumbnails. The bar at the bottom says exactly what will print and holds **Print** (Ctrl+P); when printing isn't possible it says why beside the button. |
+| **Print** | Four cards: **Printer** (its state in words, with the fix in place when it needs you), **Document**, **Paper** (size grouped, type, borderless where possible), **Output** (all the same width; copies, colour, quality, pages: all, **custom** — one page such as `2`, or pages such as `1-3, 5` or `3 to 5` — or the current one). **More options** adds odd/even pages, fit or actual size, and profiles. The **live preview** sits beside the options: your paper, the printer's margins shaded, zoom up to 16×, page thumbnails. The bar at the bottom says exactly what will print and holds **Print** (Ctrl+P); when printing isn't possible it says why beside the button. |
 | **Documents** | PDF, PNG, JPEG, TIFF (multi-page), BMP, GIF and plain text. **Open…** (Ctrl+O), drop a file on the Print page, or **right-click it in your file manager → Open With → LinPrinter**. |
 | **Activity** | **Now printing** with progress and **Cancel print** (asks first). **History**: what printed, or didn't and why, with the settings used; **Print again** opens it with the same settings; **Show file**; remove one entry or clear entries older than 30 days, 90 days or a year. |
 | **Printer** | The printer's state, big and in words. **Ink and paper** (the cartridges' own colours, with the percentage in words). **Connection**: the USB port, how LinPrinter reaches it, connection errors from the last 10 minutes, and **Test connection** (20 small questions; nothing is printed or changed). **Look after the printer**: quality and line test pages, Look first, the printer's own settings page. The printer's **own defaults** (use them in LinPrinter), and the **details**. **Identify** makes it flash. |
@@ -51,7 +51,7 @@ to open Printer. One look throughout: the Graphite Night theme, shared with the 
 | **Print to PDF** | In the printer list (**Change** on the Printer card). Saves to `~/Documents/prints` (change it in Settings). No printer needed. |
 | **Feature modules** | **Ink alerts** (on) warns before printing when a cartridge is low; it never blocks printing. **Print profiles** (off) adds presets (Everyday, Draft, B&W document, Best quality, Photo 4×6 borderless, Envelope #10) plus your own. Switch either off in Settings → Printing. |
 | **Reliable printing** | LinPrinter talks to the printer directly (IPP Everywhere over USB, through ipp-usb), with the CUPS queue as a backup, and checks each job with the printer first. It never sends a job another way when *you* need to act (paper, jam, cover, ink) or when the USB connection itself is failing; it tells you what to do instead. |
-| **Comfort** | A window that snaps to screen halves and quarters (the preview folds away in a narrow window), keyboard shortcuts (Alt+1…4 for the four places, Ctrl+P, Ctrl+O, F5), and the app icon in the panel and Alt+Tab. |
+| **Comfort** | A window that snaps to screen halves and quarters (the preview folds away in a narrow window), keyboard shortcuts (Alt+1…4 for the four places, Ctrl+P, Ctrl+O, F5), dropdowns that never change when you scroll past them (the wheel scrolls the page), and the app icon in the panel and Alt+Tab. |
 
 ## 2. A tour in screenshots
 
@@ -61,21 +61,29 @@ every release.
 
 ### Print
 
-| Ready, with the live preview | More options and a page range |
+| Ready, with the live preview | More options and custom pages |
 |---|---|
 | ![Print](docs/screenshots/02-print-ready.png) | ![More options](docs/screenshots/02b-print-more-options.png) |
 | **Printing** | **Printed** |
 | ![Printing](docs/screenshots/03-printing.png) | ![Printed](docs/screenshots/03b-printed.png) |
 | **A photo, borderless 4 × 6 in** | **Print to PDF** |
 | ![Borderless photo](docs/screenshots/04-photo-borderless.png) | ![Print to PDF](docs/screenshots/06-print-to-pdf.png) |
-| **Needs you: paper out** | **Can't reach** |
-| ![Paper out](docs/screenshots/12-paper-out.png) | ![Can't reach](docs/screenshots/13-cant-reach.png) |
+| **More options: which pages, fit, profiles** | **A page list that needs a fix** |
+| ![More options, end](docs/screenshots/02c-print-more-options-end.png) | ![Page list check](docs/screenshots/02d-page-list-check-it.png) |
+| **Needs you: paper out** | **Paper out while printing (the job waits)** |
+| ![Paper out](docs/screenshots/12-paper-out.png) | ![Paper out while printing](docs/screenshots/12b-paper-out-while-printing.png) |
+| **Can't reach** | **The menu** |
+| ![Can't reach](docs/screenshots/13-cant-reach.png) | ![Menu](docs/screenshots/15-menu.png) |
 
 ### Activity and the printer
 
-| Activity: now printing and history | Printer: health, upkeep, details |
+| Activity: now printing and history | Activity: history with results |
 |---|---|
-| ![Activity](docs/screenshots/05-activity.png) | ![Printer](docs/screenshots/07-printer.png) |
+| ![Activity](docs/screenshots/05-activity.png) | ![History](docs/screenshots/05b-activity-history.png) |
+| **Activity: didn't print** | **Activity: nothing printed yet** |
+| ![Didn't print](docs/screenshots/05c-activity-didnt-print.png) | ![Activity empty](docs/screenshots/05a-activity-empty.png) |
+| **Printer: health, upkeep, details** | **Troubleshooter: fixed** |
+| ![Printer](docs/screenshots/07-printer.png) | ![Troubleshooter fixed](docs/screenshots/07d-troubleshooter-fixed.png) |
 | **Troubleshooter: another cable** | **Troubleshooter: test the link** |
 | ![Troubleshooter](docs/screenshots/07b-troubleshooter-cable.png) | ![Link test](docs/screenshots/07c-troubleshooter-link-test.png) |
 | **Printer: can't reach** | **First start** |
@@ -104,7 +112,7 @@ and systems.
 | Systems | Linux Mint 22 (tested). Ubuntu 24.04 (the package is tested offline in a clean ubuntu:24.04). Other Debian-based systems with Python 3.10+, GTK 3, CUPS and Ghostscript. |
 | Not yet | Wi-Fi / network printers, automatic two-sided printing, N-up and booklets |
 
-To check a printer, open **Printers** or run `./run.sh --list-printers`.
+To check a printer, open **Printer** or run `./run.sh --list-printers`.
 
 **Requirements** (all distro packages, no pip): python3, python3-gi,
 python3-gi-cairo, gir1.2-gtk-3.0, python3-pil, cups, cups-client,
@@ -203,7 +211,12 @@ Tips:
   profile. Borderless is offered only where the printer allows it.
 - **Envelopes:** choose the envelope size and type, *Envelope #10* for
   example. The preview shows how the address lands.
+- **Pages → Custom** prints the pages you list in **Page list**: one page (`2`), a run (`1-3`) or
+  both (`1-3, 5, 8-10`). The count shows under the label; a list that doesn't fit the document says
+  "Check it", and Print waits until it's fixed.
 - **Pages → Current** prints the page selected in the preview.
+- **Paper runs out while printing?** The header turns **Needs you**, the bar says what it's waiting
+  for, and the job continues once you load paper. LinPrinter never sends it another way meanwhile.
 - **Print to PDF** is in the printer list (**Change** on the Printer card). The file is saved as
   `<name>-<date-time>.pdf` in `~/Documents/prints`.
 

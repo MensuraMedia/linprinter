@@ -17,7 +17,8 @@ import math
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import GLib, Gtk  # noqa: E402
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
 from lintheme import icons, status, tokens  # noqa: E402
 
@@ -399,9 +400,32 @@ class Stepper(Gtk.Box):
             self._cb(self._v)
 
 
+def no_wheel(widget):
+    """The mouse wheel never changes this control: it scrolls the page around it instead.
+
+    GTK 3 dropdowns change their choice on a wheel turn, so scrolling a long form past one
+    silently changes a setting. Applied to every lt-select."""
+
+    def on_scroll(w, event):
+        sw = w.get_ancestor(Gtk.ScrolledWindow)
+        if sw is not None:
+            adj = sw.get_vadjustment()
+            ok, _dx, dy = event.get_scroll_deltas()
+            if not ok:
+                dy = {Gdk.ScrollDirection.UP: -1, Gdk.ScrollDirection.DOWN: 1}.get(event.direction, 0)
+            step = max(adj.get_step_increment(), 48)
+            low, high = adj.get_lower(), adj.get_upper() - adj.get_page_size()
+            adj.set_value(min(max(adj.get_value() + dy * step, low), high))
+        return True  # handled: the control itself never sees the wheel
+
+    widget.add_events(Gdk.EventMask.SCROLL_MASK | Gdk.EventMask.SMOOTH_SCROLL_MASK)
+    widget.connect("scroll-event", on_scroll)
+    return widget
+
+
 def select(options, active=None, on_change=None, accessible_name=""):
     """A dropdown (Gtk.ComboBoxText) for 5+ options; options: [(id, label)]"""
-    combo = css(Gtk.ComboBoxText(), "lt-select")
+    combo = no_wheel(css(Gtk.ComboBoxText(), "lt-select"))
     for oid, label in options:
         combo.append(oid, label)
     combo.set_active_id(active if active is not None else options[0][0])

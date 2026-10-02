@@ -5,7 +5,7 @@
 | Shell | Header with status chip (Ready · Busy · Needs you · Can't reach) and menu; rail with Print, Activity, Printer, Settings; Alt+1…4, Ctrl+P, Ctrl+O, F5; compact layout below 960 px | ui/app_window.py, ui/sidebar.py |
 | Print: printer | Remembered printer reached first, status every 5 s, quiet re-search; state in words with its fix (banner + actions); Change popover (printers, Print to PDF, search again) | pages/page_print.py |
 | Print: document | Open… (Ctrl+O), drag and drop, Open With; PDF, images, text | page_print, manager_render.normalise |
-| Print: options | Paper (size grouped, type, borderless with reason), Output (copies, colour, quality, pages all/range/current), More options (odd/even, fit, profiles) | page_print, config_print |
+| Print: options | Paper (size grouped, type, borderless with reason), Output (copies, colour, quality, pages all/custom/current), More options (odd/even, fit, profiles); dropdowns ignore the mouse wheel | page_print, config_print |
 | Print: preview | Live beside the options; margins shaded; zoom to 16×; thumbnails; current page | page_print, ui/components/component_preview.py |
 | Print: action bar | Summary; Print with the reason when disabled; printing progress and Cancel (asks); printed end moment with Show in Activity / Print again; saved PDF with Show in folder | page_print, lintheme ActionBar |
 | Printing | Direct IPP → CUPS; Validate-Job; followed to the end; no fallback when the user must act or the USB link fails | manager_print, backend_ipp, backend_cups |

@@ -12,7 +12,7 @@ QUALITIES = {"draft": "Draft", "normal": "Normal", "high": "High"}
 DEFAULT_QUALITY = "normal"
 
 # Page selection (done by LinPrinter: many printers have no page-ranges)
-PAGE_CHOICES = {"all": "All", "range": "Range", "odd": "Odd", "even": "Even", "current": "Current"}
+PAGE_CHOICES = {"all": "All", "range": "Custom", "odd": "Odd", "even": "Even", "current": "Current"}
 PAGES_MAIN = ("all", "range", "current")  # the Pages choice on the Print page
 PAGES_WHICH = ("all", "odd", "even")  # More options: which of All
 

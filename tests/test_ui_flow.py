@@ -126,6 +126,17 @@ def _app(tmp_path, job_seconds=0.1):
     return ctx, page, t, close
 
 
+def _all(widget):
+    """Every widget inside `widget`"""
+    from gi.repository import Gtk
+
+    found = [widget]
+    if isinstance(widget, Gtk.Container):
+        for child in widget.get_children():
+            found += _all(child)
+    return found
+
+
 def _open(page, tmp_path):
     from PIL import Image
 
@@ -298,5 +309,55 @@ def test_chip_during_a_print_paper_out_then_back(tmp_path):
         assert page.status_key == "busy"
         ctx.printing.cancel()
         assert wait_for(lambda: not ctx.printing.busy, 30)
+    finally:
+        close()
+
+
+def test_dropdowns_ignore_the_mouse_wheel(tmp_path):
+    """Scrolling past any dropdown (Paper, profiles, Settings) must not change it; the page scrolls"""
+    from gi.repository import Gdk, Gtk
+
+    ctx, page, t, close = _app(tmp_path)
+    try:
+        page.toggle_more()  # the profiles dropdown sits in More options
+        wait_for(lambda: False, 0.5)
+        settings = ctx.nav.get_page_widget("settings")
+        combos = [page.size_combo, page.type_combo, ctx.features.get("profiles").combo]
+        combos += [w for w in _all(settings) if isinstance(w, Gtk.ComboBox)]
+        assert len(combos) >= 4
+        ctx.window.resize(900, 560)  # small enough that the options column must scroll
+        wait_for(
+            lambda: page.left.get_vadjustment().get_upper()
+            > page.left.get_vadjustment().get_page_size() + 50,
+            5,
+        )
+        adj = page.left.get_vadjustment()
+        adj.set_value(adj.get_lower())
+        for combo in combos:
+            before = combo.get_active_id()
+            event = Gdk.Event.new(Gdk.EventType.SCROLL)
+            event.scroll.direction = Gdk.ScrollDirection.DOWN
+            assert combo.emit("scroll-event", event) is True
+            assert combo.get_active_id() == before
+        assert adj.get_value() > adj.get_lower()  # the wheel scrolled the options instead
+    finally:
+        close()
+
+
+def test_an_invalid_page_list_keeps_the_column(tmp_path):
+    """A wrong page list: a short caption, the full words in the bar, and the box keeps its width"""
+    ctx, page, t, close = _app(tmp_path)
+    try:
+        _open(page, tmp_path)
+        page.pages.set_active("range")
+        page.on_pages_choice("range")
+        wait_for(lambda: False, 0.5)
+        width = page.range_entry.get_allocated_width()
+        page.range_entry.set_text("9-12")
+        wait_for(lambda: False, 0.5)
+        assert page.range_hint.get_text() == "Check it"
+        assert "None of those pages" in page.bar._detail.get_text()
+        assert abs(page.range_entry.get_allocated_width() - width) <= 2
+        assert not page.print_btn.get_sensitive()
     finally:
         close()

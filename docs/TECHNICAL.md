@@ -104,5 +104,15 @@ simulates paper-out and similar states. CUPS' `ipptool get-printer-attributes.te
   reason beside it. History results come from the job's final state (`JOB_RESULT_WORDS`).
 - Test connection: `PrintManager.link_test` asks Get-Printer-Attributes(printer-state) 20 times through
   `backend_ipp.ping` and returns `{asked, failed, seconds, when}`.
+- Print page Output: every control fills the field column with equal segments
+  (`PrintPage._fill` / `_uniform_row`); captions under a label (`_labelled_row`) carry "up to 99"
+  and the page-list count, so no control is narrower than another. An invalid page list
+  disables Print ("Fix the page list first") and the preview says why it is empty
+  (`PagePreview.show_message`).
+- Dropdowns ignore the mouse wheel (`lintheme.gtk3.components.no_wheel`, applied by `select()`):
+  GTK 3 combo boxes change their choice on scroll, so the wheel scrolls the page instead.
+- While a job runs, only reasons the user must act on (`user_must_act`) show as Needs you; everything
+  else reads Busy, so a slow status answer never offers Reconnect under a job. A job refused at
+  submit is re-checked: if the user must act, or the USB link failed, there is no fallback.
 - Layout: two panes from 960 px; below that the preview moves into a card. The window shrinks to
   720 × 540 (tested: minimum width ≤ 900).

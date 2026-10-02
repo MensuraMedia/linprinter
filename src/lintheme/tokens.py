@@ -86,6 +86,7 @@ CONTRAST_PAIRS = (
     ("on_accent", "accent_hover", 4.5),
     ("accent", "surface", 3.0),
     ("accent", "accent_soft", 3.0),
+    ("text_muted", "accent_soft", 4.5),  # a disabled selected segment
     ("border_strong", "surface", 3.0),
     ("border_strong", "bg", 3.0),
     ("focus", "bg", 3.0),

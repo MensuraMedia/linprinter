@@ -26,6 +26,10 @@ All notable changes to LinPrinter. Semantic versioning; newest first.
 - Preview: a dashed printable-edge guide, no scroll bars at fit, an empty state that says what to do.
 - **No fallback when the paper runs out at the last moment**: a job the printer refuses because it
   needs you is said in words ("Load paper in the rear tray"), never retried through the CUPS queue.
+- **Uniform Output controls**: copies, colour, quality and pages share one width with equal segments.
+  **Custom pages** (formerly Range): one page (`2`) or several (`1-3, 5`).
+- **Dropdowns ignore the mouse wheel**: scrolling the options past Paper size or type scrolls the page
+  instead of silently changing the choice (lintheme `no_wheel`, on every dropdown).
 - Removed: the separate Preview, Queue, Recent, Printers and About pages (old `--page` names still
   open the matching new page), and the theme picker.
 

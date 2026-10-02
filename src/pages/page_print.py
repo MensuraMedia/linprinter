@@ -222,12 +222,12 @@ class PrintPage(BasePage):
 
     def _paper_card(self):
         card = ui.Card("Paper")
-        self.size_combo = ui.css(Gtk.ComboBoxText(), "lt-select")
+        self.size_combo = ui.no_wheel(ui.css(Gtk.ComboBoxText(), "lt-select"))  # the wheel scrolls the page
         self.size_combo.set_row_separator_func(lambda model, it: (model[it][1] or "").startswith("-"))
         self.size_combo.connect("changed", lambda c: self.on_size_or_type())
         ui.name(self.size_combo, "Paper size")
         card.add_row(ui.field_row("Size", self.size_combo))
-        self.type_combo = ui.css(Gtk.ComboBoxText(), "lt-select")
+        self.type_combo = ui.no_wheel(ui.css(Gtk.ComboBoxText(), "lt-select"))
         self.type_combo.connect("changed", lambda c: self.on_size_or_type())
         ui.name(self.type_combo, "Paper type")
         self.type_row = ui.field_row("Type", self.type_combo)
@@ -245,15 +245,18 @@ class PrintPage(BasePage):
         self.copies = ui.Stepper(
             1, 1, 99, on_change=lambda v: self.update_summary(), accessible_name="Copies"
         )
-        self.copies_hint = ui.text("up to 99", "lt-muted")
-        card.add_row(ui.field_row("Copies", ui.hbox(self.copies, self.copies_hint)))
+        # the hint sits under the label, so the stepper keeps the shared width (mockup: "up to 99")
+        self.copies_hint = ui.text("up to 99", "lt-caption")
+        self.copies.set_tooltip_text("Copies: up to 99")
+        self._fill(self.copies, stepper=True)
+        card.add_row(self._labelled_row("Copies", self.copies, self.copies_hint))
         self.color = SegmentedControl(
             list(COLOR_MODES.items()),
             active=self.ctx.settings.get("color_mode"),
             on_changed=lambda k: self.remember("color_mode", k),
         )
         ui.name(self.color, "Colour")
-        self.color_row = ui.field_row("Colour", self.color)
+        self.color_row = self._uniform_row("Colour", self.color)
         card.add_row(self.color_row)
         self.quality = SegmentedControl(
             list(QUALITIES.items()),
@@ -261,17 +264,21 @@ class PrintPage(BasePage):
             on_changed=lambda k: self.remember("quality", k),
         )
         ui.name(self.quality, "Quality")
-        self.quality_row = ui.field_row("Quality", self.quality)
+        self.quality_row = self._uniform_row("Quality", self.quality)
         card.add_row(self.quality_row)
         self.pages = SegmentedControl(
             [(k, PAGE_CHOICES[k]) for k in PAGES_MAIN], active="all", on_changed=self.on_pages_choice
         )
         ui.name(self.pages, "Pages")
-        card.add_row(ui.field_row("Pages", self.pages))
-        self.range_entry = ui.entry("", "e.g. 1-3, 5", "Page range", width_chars=14)
+        card.add_row(self._uniform_row("Pages", self.pages))
+        self.range_entry = ui.entry("", "e.g. 2 or 1-3, 5", "Pages to print", width_chars=14)
+        self.range_entry.set_tooltip_text("One page (2), a run (1-3), or both (1-3, 5, 8-10)")
         self.range_entry.connect("changed", lambda *_: self.update_summary())
-        self.range_hint = ui.text("", "lt-muted")
-        self.range_row = ui.field_row("Range", ui.hbox(self.range_entry, self.range_hint))
+        # the count sits under the label (as Copies' hint does), so the box spans the shared width
+        self.range_hint = ui.text("", "lt-caption")
+        self.range_hint.set_max_width_chars(12)  # never wider than the label column
+        self.range_hint.set_ellipsize(3)
+        self.range_row = self._labelled_row("Page list", self.range_entry, self.range_hint)
         self.range_row.show_all()  # children visible now; the row itself is shown/hidden later
         self.range_row.set_no_show_all(True)
         self.range_row.hide()
@@ -290,7 +297,7 @@ class PrintPage(BasePage):
             on_changed=lambda k: self.update_summary(),
         )
         ui.name(self.which, "Which pages")
-        self.which_row = ui.field_row("Which", self.which)
+        self.which_row = self._uniform_row("Which", self.which)
         self.options_card.pack_start(self.which_row, False, False, 0)
         self.scaling = SegmentedControl(
             list(SCALING.items()),
@@ -298,7 +305,7 @@ class PrintPage(BasePage):
             on_changed=lambda k: self.remember("scaling", k),
         )
         ui.name(self.scaling, "Fit")
-        self.options_card.pack_start(ui.field_row("Fit", self.scaling), False, False, 0)
+        self.options_card.pack_start(self._uniform_row("Fit", self.scaling), False, False, 0)
         self.more.add(self.options_card)
         card.add_row(self.more)
         self.more_btn = ui.button("More options: odd/even, fit, profiles", self.toggle_more, kind="link")
@@ -306,6 +313,43 @@ class PrintPage(BasePage):
         self.more_btn.set_tooltip_text("Show or hide the less common options")
         card.add_row(self.more_btn)
         return card
+
+    @staticmethod
+    def _fill(control, stepper=False):
+        """Make a segmented control (or the stepper) fill the field column with equal segments"""
+        control.set_halign(Gtk.Align.FILL)  # SegmentedControl hugs its labels (START) by default
+        if stepper:  # − and + stay compact; the value takes the rest (it is a value, not a choice)
+            minus, value, plus = control.get_children()
+            for b in (minus, plus):
+                b.set_size_request(48, -1)
+            control.child_set_property(value, "expand", True)
+            control.child_set_property(value, "fill", True)
+        else:
+            control.set_homogeneous(True)
+            for child in control.get_children():
+                control.child_set_property(child, "expand", True)
+                control.child_set_property(child, "fill", True)
+        return control
+
+    def _uniform_row(self, label, control):
+        """A field row whose control fills the column, as the Paper selects do: every Output control
+        has the same width and every segment its share of it"""
+        row = ui.field_row(label, self._fill(control))
+        row.child_set_property(control, "expand", True)
+        row.child_set_property(control, "fill", True)
+        return row
+
+    @staticmethod
+    def _labelled_row(label, control, caption):
+        """A uniform row with a small caption under its label (the control keeps the full width)"""
+        words = ui.vbox(ui.text(label, "lt-field-label"), caption, spacing=0)
+        words.set_size_request(84, -1)
+        words.set_valign(Gtk.Align.CENTER)
+        row = Gtk.Box(spacing=12)
+        row.pack_start(words, False, False, 0)
+        control.set_halign(Gtk.Align.FILL)
+        row.pack_start(control, True, True, 0)
+        return row
 
     def form_row(self, label_text, widget):
         """Rows that features add to More options (profiles): the kit's field row"""
@@ -767,6 +811,7 @@ class PrintPage(BasePage):
         top = max(1, caps.copies_max)
         self.copies.set_range(1, top)
         self.copies_hint.set_text(f"up to {top}" if top > 1 else "one copy only")
+        self.copies.set_tooltip_text(f"Copies: {self.copies_hint.get_text()}")
         for key, btn in self.color.buttons.items():
             btn.set_visible(key in caps.colors)
         if self.color.get_active() not in caps.colors:
@@ -808,7 +853,7 @@ class PrintPage(BasePage):
         ui.name(self.borderless, "Borderless" if can else f"Borderless, {reason.lower()}")
 
     def on_pages_choice(self, key):
-        """Show the range row for Range; Which (odd/even) applies to All"""
+        """Show the page box for Custom; Which (odd/even) applies to All"""
         self.range_row.set_visible(key == "range")
         if key == "range":
             self.range_entry.grab_focus()
@@ -880,6 +925,7 @@ class PrintPage(BasePage):
             return
         doc = self.ctx.printing.document
         ui.set_invalid(self.range_entry, False, self.range_hint)  # the hint is set again below
+        self._pages_wrong = False
         if self.printer is None or self.printer.caps is None:
             self.bar.idle("Nothing to print yet", "Open a document and connect a printer")
             self.update_print_button()
@@ -887,13 +933,18 @@ class PrintPage(BasePage):
         try:
             pages = self.selected_pages() if doc else []
         except RenderError as e:
-            ui.set_invalid(self.range_entry, True, self.range_hint, str(e))
-            self.bar.idle("Check the page range", str(e))
+            # a short caption keeps the label column (and the box) in line; the bar has the full words
+            ui.set_invalid(self.range_entry, True, self.range_hint, "Check it")
+            self._pages_wrong = True
+            self.schedule_preview()  # clears it: no pages from an earlier list on show
+            self.bar.idle("Check the pages to print", str(e))
             self.update_print_button()
             return
         if self.pages.get_active() == "range":
             n = len(pages)
-            self.range_hint.set_text(f"{n} page{'s' if n != 1 else ''}" if doc else "e.g. 1-3, 5")
+            self.range_hint.set_text(
+                f"{n} page{'s' if n != 1 else ''}" if doc else ""
+            )  # example: placeholder
         ticket = self.ticket()
         detail = self.ctx.printing.settings_summary(ticket, self.printer)
         if self.printer.virtual and self.printer.key == PDF_PRINTER_ID:
@@ -922,6 +973,8 @@ class PrintPage(BasePage):
             reason = "Connect a printer first"
         elif not self.ctx.printing.document:
             reason = "Open a document first"
+        elif getattr(self, "_pages_wrong", False):
+            reason = "Fix the page list first"  # the bar's headline already says what to check
         elif key == "attention" and status and (user_must_act(status[3]) or status[2] == "stopped"):
             reason = needs_you_words(status[3])
         elif key == "error" or not self.printer.methods:
@@ -961,7 +1014,7 @@ class PrintPage(BasePage):
         except RenderError as e:
             self.preview_spinner.stop()
             self.zoom.set_sensitive(False)
-            self.preview.set_pages([])
+            self.preview.show_message("Nothing to show: fix the page list.")
             self.preview_info.set_text(str(e))
             return False
         ticket = self.ticket()

@@ -449,6 +449,7 @@ Constants: `ZOOM_STEPS`, `THUMB_CACHE_MAX`, `LARGE_CACHE_MAX`
 | `to_pixbuf(img)` | Pillow RGB image -> GdkPixbuf |
 | class `PagePreview(Gtk.Box)` | Selected-page view + thumbnail strip; on_select(index) when the page changes |
 | &nbsp;&nbsp;`.__init__(self, on_select=None, cache_dir=None, rows=1, on_zoom=None, label_for=None)` | Large view (scrolled, zoomable) plus the thumbnail strip (rows: 1 or 2) |
+| &nbsp;&nbsp;`.show_message(self, words)` | No pages, and why (e.g. a page list that matches none): not the "no document" state |
 | &nbsp;&nbsp;`.set_pages(self, pages, selected=None)` | Show a page list and select one (keeps selection if possible) |
 | &nbsp;&nbsp;`.refresh_selected(self)` | Re-render after the selected page changed (rotation, Quick Edit) |
 | &nbsp;&nbsp;`.select(self, index)` | Show another page (only the highlight moves; nothing is rebuilt) |
@@ -563,6 +564,9 @@ Constants: `PREVIEW_DPI`, `NO_DOC`
 | &nbsp;&nbsp;`._document_card(self)` |  |
 | &nbsp;&nbsp;`._paper_card(self)` |  |
 | &nbsp;&nbsp;`._output_card(self)` |  |
+| &nbsp;&nbsp;`._fill(control, stepper=False)` | Make a segmented control (or the stepper) fill the field column with equal segments |
+| &nbsp;&nbsp;`._uniform_row(self, label, control)` | A field row whose control fills the column, as the Paper selects do: every Output control |
+| &nbsp;&nbsp;`._labelled_row(label, control, caption)` | A uniform row with a small caption under its label (the control keeps the full width) |
 | &nbsp;&nbsp;`.form_row(self, label_text, widget)` | Rows that features add to More options (profiles): the kit's field row |
 | &nbsp;&nbsp;`.toggle_more(self)` | Show or hide More options (remembered) |
 | &nbsp;&nbsp;`._preview_pane(self)` |  |
@@ -597,7 +601,7 @@ Constants: `PREVIEW_DPI`, `NO_DOC`
 | &nbsp;&nbsp;`.fill_options(self, printer)` | Paper sizes (grouped), types, colours, qualities for this printer |
 | &nbsp;&nbsp;`.on_size_or_type(self)` | Paper size or type changed: remember it and update Borderless |
 | &nbsp;&nbsp;`.update_availability(self)` | Borderless only where the printer allows it for this size and type (the reason beside it) |
-| &nbsp;&nbsp;`.on_pages_choice(self, key)` | Show the range row for Range; Which (odd/even) applies to All |
+| &nbsp;&nbsp;`.on_pages_choice(self, key)` | Show the page box for Custom; Which (odd/even) applies to All |
 | &nbsp;&nbsp;`.page_choice(self)` | The select_pages() choice from Pages and Which |
 | &nbsp;&nbsp;`.choices(self)` | The current choices as a dict (also what profiles store) |
 | &nbsp;&nbsp;`.apply_choices(self, choices)` | Set the controls from a dict (profiles, printer defaults); unsupported choices are skipped |
@@ -909,6 +913,7 @@ Constants: `C`
 | &nbsp;&nbsp;`.get_value(self)` |  |
 | &nbsp;&nbsp;`.set_range(self, minimum, maximum)` | New limits (e.g. the printer's copies-supported); the value is clamped |
 | &nbsp;&nbsp;`.set_value(self, value, notify=False)` |  |
+| `no_wheel(widget)` | The mouse wheel never changes this control: it scrolls the page around it instead. |
 | `select(options, active=None, on_change=None, accessible_name='')` | A dropdown (Gtk.ComboBoxText) for 5+ options; options: [(id, label)] |
 | class `SwitchRow(Gtk.Box)` | Title + one-line description + switch (named after the title) |
 | &nbsp;&nbsp;`.__init__(self, title, description=None, active=False, on_toggle=None)` |  |

@@ -70,3 +70,5 @@ HOST-USB.md's host theories need re-reading in this light.
 - Try the redesign on the real TR150 (user's go-ahead needed to print).
 - Status asks for every attribute (~119 KB with media-col-database) each poll; a small request (printer-state, -reasons, marker-*, media-ready) would spare the USB link (code review, 2026-10-02).
 - After a failed upload the status re-read is a full Get-Printer-Attributes (up to ~10 s on a dead link); use the small request from the item above.
+- Activity shows no row while LinPrinter is still preparing/sending a job (before the printer has it); Cancel is on the Print page then. User said it's fine (2026-10-02).
+- Merge feat/0.3.0-redesign to main when the user says so; then the linux-peripherals submodule pointer and the offline bundle (fonts-ubuntu).

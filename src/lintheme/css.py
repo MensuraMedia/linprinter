@@ -139,11 +139,15 @@ flowboxchild {{ padding: 0; }}
 .lt-seg button:first-child {{ border-left: none; border-radius: {R['control'] - 1}px 0 0 {R['control'] - 1}px; }}
 .lt-seg button:last-child {{ border-radius: 0 {R['control'] - 1}px {R['control'] - 1}px 0; }}
 .lt-seg button:checked {{ background-color: {C['accent']}; color: {C['on_accent']}; font-weight: 500; }}
+.lt-seg button:disabled {{ color: {C['text_muted']}; }}
+.lt-seg button:checked:disabled {{ background-color: {C['accent_soft']}; color: {C['text_muted']}; }}
 .lt-seg label.lt-value {{ min-width: 44px; border-left: 1px solid {C['border']}; }}
 .lt-select button, button.lt-select {{
   background-image: none; background-color: {C['surface']}; color: {C['text']};
   border: 1px solid {C['border_strong']}; border-radius: {R['control']}px; min-height: {S['control'] - 2}px; box-shadow: none;
 }}
+.lt-select button:disabled, button.lt-select:disabled {{ color: {C['text_muted']}; border-style: dashed; }}
+.lt-entry:disabled, entry.lt-entry:disabled {{ color: {C['text_muted']}; border-style: dashed; }}
 .lt-entry, entry.lt-entry {{
   background-image: none; background-color: {C['surface']}; color: {C['text']};
   border: 1px solid {C['border_strong']}; border-radius: {R['control']}px; min-height: {S['control'] - 2}px; padding: 0 10px;

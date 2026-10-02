@@ -90,6 +90,9 @@ class PagePreview(Gtk.Box):
         empty.get_style_context().remove_class("lt-card")  # it sits in the preview pane, not on a card
         empty.set_valign(Gtk.Align.CENTER)
         self.empty = ui.text("", "lt-muted", wrap=True)  # why a page couldn't be shown
+        self.empty.set_justify(Gtk.Justification.CENTER)
+        self.empty.set_halign(Gtk.Align.CENTER)
+        self.empty.set_valign(Gtk.Align.CENTER)
         self.stack = Gtk.Stack()
         self.stack.add_named(empty, "empty")
         self.stack.add_named(self.empty, "error")
@@ -110,9 +113,17 @@ class PagePreview(Gtk.Box):
         self._apply_strip_height()
 
     # -- public ------------------------------------------------------------
+    def show_message(self, words):
+        """No pages, and why (e.g. a page list that matches none): not the "no document" state"""
+        self.set_pages([])
+        self._message = words  # kept until pages come back: later redraws show it, not "no document"
+        self.empty.set_text(words)
+        self.stack.set_visible_child_name("error")
+
     def set_pages(self, pages, selected=None):
         """Show a page list and select one (keeps selection if possible)"""
         self.pages = pages
+        self._message = None
         if selected is None:
             selected = min(max(self.selected, 0), len(pages) - 1)
         self.selected = selected if pages else -1
@@ -271,7 +282,9 @@ class PagePreview(Gtk.Box):
         """Render the selected page at fit x zoom (one-shot timeout)"""
         self._resize_source = None
         if self.selected < 0 or not self.pages:
-            self.stack.set_visible_child_name("empty")
+            if getattr(self, "_message", None):
+                self.empty.set_text(self._message)
+            self.stack.set_visible_child_name("error" if getattr(self, "_message", None) else "empty")
             return False
         w, h = self._last_size
         fit_w, fit_h = max(w - 24, 200), max(h - 24, 200)

@@ -3,8 +3,9 @@
 ```
 src/
   main.py                 entry point: options, services, window (--test-printer, --list-printers, --page …)
-  lintheme/               vendored lin-dashboard-theme kit: Graphite Night tokens, CSS, status words, icons,
-                          GTK 3 components (chip, rail, cards, banners, gauges, action bar, steps…)
+  lintheme/               vendored lin-dashboard-theme kit (1.2.7): Graphite Night tokens, CSS, status words,
+                          icons, GTK 3 components (chip, rail, cards, banners, gauges, action bar, steps,
+                          no_wheel dropdowns…)
   config/                 layout, print vocabulary (config_print: sizes, types, groups, USB-only flag)
   ui/                     app window (header + status chip + menu, shortcuts), sidebar = rail (NAV_ITEMS),
                           content area (PAGES), app_css (old class names on the tokens), components (segmented, preview)
@@ -49,6 +50,7 @@ PrintPage.on_print
   → PrintManager.print_async(printer, ticket, pages)            [worker thread]
       for method in printer.methods (P1, P2 | PDF | T):
         status → user must act? raise, no fallback
+        submit refused → status again: user must act, or link failed? raise, no fallback
         backend.submit:  P1/T  render_pwg → Validate-Job → Print-Job (streamed)
                          P2    render_pdf → lp -o …
                          PDF   render_pdf → ~/Documents/prints/<name>-<time>.pdf
