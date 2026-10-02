@@ -120,6 +120,13 @@ class IppBackend:
         """PrinterCapabilities for a printer"""
         return capabilities_from_ipp(self.attributes(uri))
 
+    def ping(self, uri):
+        """One small question (the printer's state): used by the link test"""
+        try:
+            ipp.IppClient(uri, timeout=3)._attributes(("printer-state",))
+        except ipp.IppError as e:
+            raise _error(e)
+
     def status(self, uri):
         """(state, reasons, markers)"""
         return printer_status(self.attributes(uri, timeout=5))

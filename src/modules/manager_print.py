@@ -45,6 +45,30 @@ FINAL_JOB_STATES = ("completed", "canceled", "aborted")
 JOB_TIMEOUT = 1800  # seconds to follow a job before giving up watching it
 
 
+# how a finished job is recorded in Activity's history ("printed" = it printed)
+JOB_RESULT_WORDS = {
+    "canceled": "Cancelled",
+    "aborted": "Stopped by the printer",
+    "processing": "Sent (not confirmed)",  # still printing when LinPrinter stopped following it
+}
+
+
+def refused_words(error):
+    """Plain words for a job the printer refused (the IPP status stays in the log)"""
+    if error.code in ("unreachable", "link"):
+        return str(error)  # already plain words with the next step
+    return {
+        "busy": "The printer isn't taking jobs right now. Check its display or lights, then print again.",
+        "unsupported": "The printer can't print with these settings. Try other paper or quality.",
+    }.get(error.code, "The printer refused the job. Check its display or lights, then print again.")
+
+
+def ticket_choices(ticket):
+    """The user-facing choices of a ticket (Activity → Print again restores them)"""
+    keys = ("size", "type", "borderless", "color", "quality", "copies", "scaling")
+    return {k: ticket[k] for k in keys if k in ticket}
+
+
 def model_key(name):
     """Normalised model name used to match one printer offered by several methods"""
     name = re.sub(r"\(usb\)|\busb\b", "", name.lower())
@@ -318,7 +342,13 @@ class PrintManager:
 
     # -- status ----------------------------------------------------------------------
     def status(self, printer):
-        """(level, message, state, reasons, markers) for a printer"""
+        """(level, message, state, reasons, markers) for a printer (in a worker thread)"""
+        try:
+            return self._status(printer)
+        finally:
+            usb_link.recent()  # read the kernel log here, after the answer, off the GTK thread; pages reuse it
+
+    def _status(self, printer):
         if printer is None or not printer.methods:
             return "error", (printer.hint if printer else "No printer."), "unknown", [], []
         method = printer.methods[0]
@@ -331,6 +361,28 @@ class PrintManager:
             return level, message, "unknown", [], []
         level, message = describe(state, reasons)
         return level, message, state, reasons, markers
+
+    def link_test(self, printer, rounds=20, give_up_after=4):
+        """Ask the printer `rounds` small questions over its direct connection and count failures.
+
+        Read-only: nothing is printed or changed, and no password is needed. Stops early after
+        `give_up_after` failures in a row (a dead link answers nothing)."""
+        method = next((m for m in printer.methods if m.code in ("P1", "T")), None) if printer else None
+        if method is None:
+            raise PrintError("This printer has no direct connection to test.", "unsupported")
+        failed = asked = streak = 0
+        start = time.monotonic()
+        for _ in range(rounds):
+            asked += 1
+            try:
+                method.backend.ping(method.target)
+                streak = 0
+            except PrintError:
+                failed += 1
+                streak += 1
+                if streak >= give_up_after:
+                    break
+        return {"asked": asked, "failed": failed, "seconds": time.monotonic() - start, "when": time.time()}
 
     def status_async(self, printer, on_done):
         """status() in the background"""
@@ -422,6 +474,25 @@ class PrintManager:
         }
 
     @staticmethod
+    def settings_summary(ticket, printer):
+        """The settings in words, without copies and pages (Activity, the Print bar)"""
+        from backends.backend_base import type_label
+
+        parts = [
+            COLOR_MODES.get(ticket["color"], ticket["color"]),
+            QUALITIES.get(ticket["quality"], ticket["quality"]) if printer.key != PDF_PRINTER_ID else "",
+            (
+                printer.caps.size(ticket["size"]).label
+                if printer.caps and printer.caps.size(ticket["size"])
+                else ticket["size"]
+            ),
+            type_label(ticket["type"]) if ticket.get("type") else "",
+            "borderless" if ticket["borderless"] else "",
+            SCALING.get(ticket["scaling"], "").lower(),
+        ]
+        return " · ".join(p for p in parts if p)
+
+    @staticmethod
     def summary(ticket, pages, printer):
         """One line of what will print"""
         from backends.backend_base import type_label
@@ -494,15 +565,40 @@ class PrintManager:
                         job_name,
                     )
                 except PrintError as e:
-                    last = e
                     if e.needs_user:
                         raise
-                    log.warning("printing via %s failed (%s); trying the next method", method.code, e)
+                    if self._cancel.is_set():  # cancelled while sending: that is the outcome
+                        raise PrintError("Cancelled.", "user")
+                    log.warning("printing via %s failed (%s)", method.code, e)
+                    # refused because it now needs the user (paper ran out since the check), or the
+                    # link failed under the upload? Then say so, and never fall back: another method
+                    # would meet the same empty tray or the same dead ipp-usb link
+                    try:
+                        state, reasons, _m = method.backend.status(method.target)
+                    except PrintError as se:
+                        if se.needs_user:
+                            raise
+                        state, reasons = None, []
+                    if user_must_act(reasons):
+                        raise PrintError(describe(state, reasons)[1], "user")
+                    words = str(e) if method.code == "P2" else refused_words(e)  # CUPS' own words are plain
+                    if e.code == "busy" and method.code in ("P1", "T"):
+                        # the printer itself isn't taking jobs: a CUPS queue would only hold the job
+                        raise PrintError(words, "busy")
+                    last = PrintError(words, e.code)
+                    log.info("trying the next method")
                     continue
                 self.current_job = {"method": method, "job_id": job_id, "printer": printer}
                 result = self._follow(method, job_id, len(pages) * ticket["copies"], progress)
                 if recent:
-                    add_recent(doc["path"], printer.name, len(pages), self.summary(ticket, pages, printer))
+                    add_recent(
+                        doc["path"],
+                        printer.name,
+                        len(pages),
+                        self.settings_summary(ticket, printer),
+                        result=JOB_RESULT_WORDS.get(result.get("state"), "printed"),
+                        choices=ticket_choices(ticket),
+                    )
                 return result
             raise last or PrintError("No way to reach this printer worked.", "unreachable")
 

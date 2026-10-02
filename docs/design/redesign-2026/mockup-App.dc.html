@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LinPrinter prototype</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&amp;family=Ubuntu+Mono&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1f7a4d}a:hover{color:#155c39}
+</style>
+</helmet>
+<div style="{{s.root}}">
+
+<header style="{{s.header}}">
+<div style="{{s.brand}}">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.cAccent}}"><path d="M7 9V4h10v5"></path><rect x="3" y="9" width="18" height="8" rx="2"></rect><path d="M7 14h10v6H7z"></path></svg>
+<span>LinPrinter</span>
+<span style="{{s.crumb}}">/ {{v.title}}</span>
+</div>
+<div style="flex-grow: 1"></div>
+<button style="{{s.chip}}" onClick="{{go.printer}}" aria-label="Printer status: {{v.chipLabel}}. Open printer page">
+<sc-if value="{{v.stOk}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.cOk}}"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l2.5 2.5L16 9.5"></path></svg></sc-if>
+<sc-if value="{{v.stBusy}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="{{s.cBusy}}"><path d="M12 3a9 9 0 1 0 9 9"></path></svg></sc-if>
+<sc-if value="{{v.stAttn}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.cAttn}}"><path d="M12 3.5l9 16h-18z"></path><path d="M12 10v4M12 17v.5"></path></svg></sc-if>
+<sc-if value="{{v.stErr}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="{{s.cErr}}"><path d="M9 7H7a5 5 0 0 0 0 10h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h2M14 12h2"></path></svg></sc-if>
+<sc-if value="{{v.stNone}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="{{s.cMuted}}"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path></svg></sc-if>
+<span>{{v.chipLabel}}</span>
+</button>
+<button style="{{s.iconBtn}}" aria-label="Main menu: shortcuts, help, about">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>
+</button>
+</header>
+
+<div style="display: flex; flex-grow: 1; min-height: 0">
+<nav aria-label="Main" style="{{s.rail}}">
+<button style="{{nav.print}}" onClick="{{go.print}}" aria-current="{{cur.print}}">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V4h10v5"></path><rect x="3" y="9" width="18" height="8" rx="2"></rect><path d="M7 14h10v6H7z"></path></svg>
+<span style="{{s.navLabel}}">Print</span>
+</button>
+<button style="{{nav.activity}}" onClick="{{go.activity}}" aria-current="{{cur.activity}}">
+<span style="position: relative; display: inline-flex">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+<sc-if value="{{v.pPrinting}}" hint-placeholder-val="{{ false }}"><span style="{{s.badge}}" aria-label="1 job printing">1</span></sc-if>
+</span>
+<span style="{{s.navLabel}}">Activity</span>
+</button>
+<button style="{{nav.printer}}" onClick="{{go.printer}}" aria-current="{{cur.printer}}">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3v5M15 3v5"></path><path d="M6 8h12v4a6 6 0 0 1-12 0z"></path><path d="M12 18v3"></path></svg>
+<span style="{{s.navLabel}}">Printer</span>
+</button>
+<div style="flex-grow: 1"></div>
+<button style="{{nav.settings}}" onClick="{{go.settings}}" aria-current="{{cur.settings}}">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg>
+<span style="{{s.navLabel}}">Settings</span>
+</button>
+</nav>
+
+<main style="{{s.main}}">
+
+<!-- ============ PRINT ============ -->
+<sc-if value="{{v.print}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; flex-grow: 1; min-height: 0">
+<div style="display: flex; flex-grow: 1; min-height: 0">
+<section aria-label="Print options" style="{{s.optcol}}">
+
+<div style="{{s.card}}">
+<div style="{{s.cardHead}}"><h2 style="{{s.h2}}">Printer</h2><button style="{{s.btnGhost}}">Change</button></div>
+<sc-if value="{{v.pFirst}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; gap: 12px; align-items: center">
+<div style="{{s.iconTile}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg></div>
+<div style="display: flex; flex-direction: column"><span style="font-weight: 500">Looking for a USB printer…</span><span style="{{s.muted}}">Plug it in and switch it on. Print to PDF works meanwhile.</span></div>
+</div>
+<div style="display: flex; gap: 8px"><button style="{{s.btnPrimary}}">Find printer</button><button style="{{s.btn}}">Use Print to PDF</button></div>
+</sc-if>
+<sc-if value="{{v.hasPrinter}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px; align-items: center">
+<div style="{{s.iconTile}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V4h10v5"></path><rect x="3" y="9" width="18" height="8" rx="2"></rect><path d="M7 14h10v6H7z"></path></svg></div>
+<div style="display: flex; flex-direction: column; min-width: 0">
+<span style="font-weight: 500">Canon TR150 series</span>
+<sc-if value="{{v.stOk}}" hint-placeholder-val="{{ true }}"><span style="{{s.statusLine}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.cOk}}"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l2.5 2.5L16 9.5"></path></svg>Ready · Letter loaded · ink 60% / 80%</span></sc-if>
+<sc-if value="{{v.stBusy}}" hint-placeholder-val="{{ false }}"><span style="{{s.statusLine}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="{{s.cBusy}}"><path d="M12 3a9 9 0 1 0 9 9"></path></svg>Busy · printing your document</span></sc-if>
+<sc-if value="{{v.stAttn}}" hint-placeholder-val="{{ false }}"><span style="{{s.statusLine}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.cAttn}}"><path d="M12 3.5l9 16h-18z"></path><path d="M12 10v4M12 17v.5"></path></svg>Needs you · out of paper</span></sc-if>
+<sc-if value="{{v.stErr}}" hint-placeholder-val="{{ false }}"><span style="{{s.statusLine}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="{{s.cErr}}"><path d="M9 7H7a5 5 0 0 0 0 10h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h2M14 12h2"></path></svg>Can't reach · USB link failing</span></sc-if>
+</div>
+</div>
+<sc-if value="{{v.pNeeds}}" hint-placeholder-val="{{ false }}">
+<div role="status" style="{{s.bannerAttn}}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span><strong style="font-weight: 500">Load paper in the rear tray.</strong> LinPrinter checks again by itself, then you can print.</span>
+<div><button style="{{s.btnSm}}">Check now</button></div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{v.pCant}}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="{{s.bannerErr}}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span><strong style="font-weight: 500">The printer keeps dropping off USB</strong> (14 errors on port 3-3 in 10 minutes). Try another USB cable first.</span>
+<div style="display: flex; gap: 8px"><button style="{{s.btnPrimarySm}}" onClick="{{go.trouble}}">Troubleshoot</button><button style="{{s.btnSm}}">Test connection</button></div>
+</div>
+</div>
+</sc-if>
+</sc-if>
+</div>
+
+<div style="{{s.card}}">
+<div style="{{s.cardHead}}"><h2 style="{{s.h2}}">Document</h2><sc-if value="{{v.hasDoc}}" hint-placeholder-val="{{ true }}"><button style="{{s.btnGhost}}">Replace…</button></sc-if></div>
+<sc-if value="{{v.pFirst}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.dropzone}}">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.cMuted}}"><path d="M14 3H6v18h12V7z"></path><path d="M14 3v4h4"></path><path d="M12 11v6M9 14l3-3 3 3"></path></svg>
+<span>Drop a PDF, picture or text file here</span>
+<button style="{{s.btnPrimarySm}}">Open… <kbd style="{{s.kbdOnAccent}}">Ctrl+O</kbd></button>
+</div>
+</sc-if>
+<sc-if value="{{v.hasDoc}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px; align-items: center">
+<div style="{{s.iconTile}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6v18h12V7z"></path><path d="M14 3v4h4"></path><path d="M9 13h6M9 16.5h4"></path></svg></div>
+<div style="display: flex; flex-direction: column"><span style="font-weight: 500">Quarterly report.pdf</span><span style="{{s.muted}}">3 pages · 1.2 MB · ~/Downloads</span></div>
+</div>
+</sc-if>
+</div>
+
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">Paper</h2>
+<div style="{{s.row}}"><label style="{{s.label}}">Size</label>
+<button style="{{s.select}}" aria-label="Paper size: Letter, 8.5 by 11 inches">
+<span style="display: flex; align-items: center; gap: 10px"><span style="{{s.paperThumb}}"></span>Letter · 8.5 × 11 in</span>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+</button></div>
+<div style="{{s.row}}"><label style="{{s.label}}">Type</label>
+<button style="{{s.select}}" aria-label="Paper type: Plain paper"><span>Plain paper</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+<div style="{{s.row}}"><span style="{{s.label}}">Borderless</span>
+<span style="{{s.switchOff}}" aria-hidden="true"><span style="{{s.knob}}"></span></span>
+<span style="{{s.muted}}">Needs photo paper</span></div>
+</div>
+
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">Output</h2>
+<div style="{{s.row}}"><label style="{{s.label}}">Copies</label>
+<div style="{{s.seg}}"><button style="{{s.segOff}}" aria-label="Fewer copies">−</button><span style="{{s.stepVal}}">1</span><button style="{{s.segOff}}" aria-label="More copies">+</button></div>
+<span style="{{s.muted}}">up to 99</span></div>
+<div style="{{s.row}}"><span style="{{s.label}}">Colour</span>
+<div role="radiogroup" aria-label="Colour" style="{{s.seg}}"><button role="radio" aria-checked="true" style="{{s.segOn}}">Colour</button><button role="radio" aria-checked="false" style="{{s.segOff}}">Black &amp; white</button></div></div>
+<div style="{{s.row}}"><span style="{{s.label}}">Quality</span>
+<div role="radiogroup" aria-label="Quality" style="{{s.seg}}"><button role="radio" aria-checked="false" style="{{s.segOff}}">Draft</button><button role="radio" aria-checked="true" style="{{s.segOn}}">Normal</button><button role="radio" aria-checked="false" style="{{s.segOff}}">High</button></div></div>
+<div style="{{s.row}}"><span style="{{s.label}}">Pages</span>
+<div role="radiogroup" aria-label="Pages" style="{{s.seg}}"><button role="radio" aria-checked="{{v.allOn}}" style="{{v.segAll}}">All</button><button role="radio" aria-checked="{{v.rangeOn}}" style="{{v.segRange}}">Range</button><button role="radio" aria-checked="false" style="{{s.segOff}}">Current</button></div></div>
+<sc-if value="{{v.pMore}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.row}}"><label style="{{s.label}}">Range</label>
+<input value="1-2" aria-label="Page range" style="{{s.inputFocus}}"><span style="{{s.muted}}">2 pages · e.g. 1-3, 5</span></div>
+<div style="{{s.divider}}"></div>
+<div style="{{s.row}}"><span style="{{s.label}}">Which</span>
+<div role="radiogroup" aria-label="Which pages" style="{{s.seg}}"><button role="radio" aria-checked="true" style="{{s.segOn}}">All</button><button role="radio" aria-checked="false" style="{{s.segOff}}">Odd</button><button role="radio" aria-checked="false" style="{{s.segOff}}">Even</button></div></div>
+<div style="{{s.row}}"><span style="{{s.label}}">Fit</span>
+<div role="radiogroup" aria-label="Fit" style="{{s.seg}}"><button role="radio" aria-checked="true" style="{{s.segOn}}">Fit to page</button><button role="radio" aria-checked="false" style="{{s.segOff}}">Actual size</button></div></div>
+<div style="{{s.row}}"><label style="{{s.label}}">Profile</label>
+<button style="{{s.select}}"><span>Everyday document</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+<button style="{{s.btnGhost}}" aria-expanded="true">Fewer options</button>
+</sc-if>
+<sc-if value="{{v.notMore}}" hint-placeholder-val="{{ true }}">
+<div><button style="{{s.btnGhost}}" aria-expanded="false">More options: odd/even, fit, profiles</button></div>
+</sc-if>
+</div>
+
+<sc-if value="{{v.narrow}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.card}}">
+<div style="{{s.cardHead}}"><h2 style="{{s.h2}}">Preview</h2><button style="{{s.btnSm}}">Show preview</button></div>
+<span style="{{s.muted}}">3 pages fit on Letter. The preview opens over the options at this window size.</span>
+</div>
+</sc-if>
+</section>
+
+<sc-if value="{{v.wide}}" hint-placeholder-val="{{ true }}">
+<section aria-label="Preview" style="{{s.previewPane}}">
+<div style="display: flex; align-items: center; gap: 12px">
+<h2 style="{{s.h2}}">Preview</h2>
+<sc-if value="{{v.hasDoc}}" hint-placeholder-val="{{ true }}"><span style="{{s.muted}}">Page 1 of 3 · Letter · margins shaded</span></sc-if>
+<div style="flex-grow: 1"></div>
+<div style="{{s.seg}}"><button style="{{s.segOff}}" aria-label="Zoom out">−</button><span style="{{s.stepVal}}">100%</span><button style="{{s.segOff}}" aria-label="Zoom in">+</button></div>
+</div>
+<sc-if value="{{v.hasDoc}}" hint-placeholder-val="{{ true }}">
+<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; min-height: 0">
+<div style="width: 404px; height: 523px; background: #e8ecea; border: 1px solid #b9c2be; box-shadow: 0 2px 10px rgba(0,0,0,0.12); padding: 14px; box-sizing: border-box; display: flex">
+<div style="flex-grow: 1; background: #ffffff; padding: 30px 32px; display: flex; flex-direction: column; gap: 10px; outline: 1px dashed #9aa5a0">
+<div style="height: 16px; width: 62%; background: #2b2f33; border-radius: 2px"></div>
+<div style="height: 8px; width: 38%; background: #8b949b; border-radius: 2px"></div>
+<div style="height: 8px"></div>
+<div style="height: 6px; width: 100%; background: #c3c9cd; border-radius: 2px"></div>
+<div style="height: 6px; width: 96%; background: #c3c9cd; border-radius: 2px"></div>
+<div style="height: 6px; width: 99%; background: #c3c9cd; border-radius: 2px"></div>
+<div style="height: 6px; width: 72%; background: #c3c9cd; border-radius: 2px"></div>
+<div style="height: 120px; display: flex; align-items: flex-end; gap: 10px; padding: 10px 6px 0; border-bottom: 1px solid #8b949b">
+<div style="width: 34px; height: 46%; background: #3b6ea8"></div><div style="width: 34px; height: 64%; background: #3b6ea8"></div><div style="width: 34px; height: 58%; background: #3b6ea8"></div><div style="width: 34px; height: 82%; background: #e0802f"></div><div style="width: 34px; height: 92%; background: #3b6ea8"></div>
+</div>
+<div style="height: 6px; width: 100%; background: #c3c9cd; border-radius: 2px"></div>
+<div style="height: 6px; width: 93%; background: #c3c9cd; border-radius: 2px"></div>
+<div style="height: 6px; width: 98%; background: #c3c9cd; border-radius: 2px"></div>
+<div style="height: 6px; width: 60%; background: #c3c9cd; border-radius: 2px"></div>
+</div>
+</div>
+</div>
+<div style="display: flex; gap: 12px; justify-content: center" role="list" aria-label="Pages">
+<button style="{{s.thumbOn}}" aria-label="Page 1, shown">1</button>
+<button style="{{s.thumb}}" aria-label="Page 2">2</button>
+<button style="{{s.thumb}}" aria-label="Page 3">3</button>
+</div>
+</sc-if>
+<sc-if value="{{v.pFirst}}" hint-placeholder-val="{{ false }}">
+<div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center">
+<div style="width: 220px; height: 284px; border: 2px dashed {{t.borderStrong}}; border-radius: 6px"></div>
+<span style="font-weight: 500">Your pages will appear here</span>
+<span style="{{s.muted}}">Exactly as they will print, margins and all.</span>
+</div>
+</sc-if>
+</section>
+</sc-if>
+</div>
+
+<div style="{{s.actionbar}}">
+<sc-if value="{{v.barIdle}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; min-width: 0">
+<span style="font-weight: 500">{{v.summaryHead}}</span>
+<span style="{{s.muted}}">{{v.summary}}</span>
+</div>
+<div style="flex-grow: 1"></div>
+<sc-if value="{{v.canPrint}}" hint-placeholder-val="{{ true }}">
+<button style="{{s.btnPrint}}" onClick="{{go.printing}}">Print <kbd style="{{s.kbdOnAccent}}">Ctrl+P</kbd></button>
+</sc-if>
+<sc-if value="{{v.cantPrint}}" hint-placeholder-val="{{ false }}">
+<span style="{{s.muted}}">{{v.whyNot}}</span>
+<button style="{{s.btnPrintOff}}" aria-disabled="true">Print</button>
+</sc-if>
+</sc-if>
+<sc-if value="{{v.pPrinting}}" hint-placeholder-val="{{ false }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="{{s.cBusy}}"><path d="M12 3a9 9 0 1 0 9 9"></path></svg>
+<div role="status" style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<span style="font-weight: 500">Printing page 2 of 3 · 24 s</span>
+<div style="{{s.track}}"><div style="{{s.fill66}}"></div></div>
+</div>
+<div style="flex-grow: 1"></div>
+<button style="{{s.btnDanger}}">Cancel print</button>
+<button style="{{s.btnPrintOff}}" aria-disabled="true">Printing…</button>
+</sc-if>
+<sc-if value="{{v.pPrinted}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.doneMark}}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></div>
+<div role="status" style="display: flex; flex-direction: column; min-width: 0">
+<span style="font-weight: 500; font-size: 16px">Printed 3 pages on Canon TR150 · 62 s</span>
+<span style="{{s.muted}}">Saved in Activity with these settings, ready to print again.</span>
+</div>
+<div style="flex-grow: 1"></div>
+<button style="{{s.btn}}" onClick="{{go.activity}}">Show in Activity</button>
+<button style="{{s.btnPrint}}" onClick="{{go.printing}}">Print again</button>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<!-- ============ ACTIVITY ============ -->
+<sc-if value="{{v.activity}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.page}}">
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px">
+<div><h1 style="{{s.h1}}">Activity</h1><p style="{{s.pMuted}}">What is printing now, and everything printed before, with the settings used.</p></div>
+<sc-if value="{{v.acFull}}" hint-placeholder-val="{{ true }}"><button style="{{s.btn}}">Clear older than…</button></sc-if>
+</div>
+<sc-if value="{{v.acFull}}" hint-placeholder-val="{{ true }}">
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">Now printing</h2>
+<div style="display: flex; align-items: center; gap: 14px">
+<div style="{{s.iconTile}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6v18h12V7z"></path><path d="M14 3v4h4"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1; min-width: 0">
+<div style="display: flex; justify-content: space-between"><span style="font-weight: 500">Quarterly report.pdf</span><span style="{{s.muted}}">Canon TR150 · page 2 of 3 · 24 s</span></div>
+<div style="{{s.track}}"><div style="{{s.fill66}}"></div></div>
+</div>
+<button style="{{s.btnDanger}}">Cancel print</button>
+</div>
+</div>
+<div style="{{s.card}}">
+<div style="{{s.cardHead}}">
+<h2 style="{{s.h2}}">History</h2>
+<div role="radiogroup" aria-label="Show" style="{{s.seg}}"><button role="radio" aria-checked="true" style="{{s.segOn}}">All</button><button role="radio" aria-checked="false" style="{{s.segOff}}">Printed</button><button role="radio" aria-checked="false" style="{{s.segOff}}">Didn't print</button></div>
+</div>
+<div role="table" aria-label="Print history" style="display: flex; flex-direction: column">
+<div role="row" style="{{s.thead}}"><span role="columnheader">When</span><span role="columnheader">Document</span><span role="columnheader">Settings</span><span role="columnheader">Result</span><span role="columnheader" style="text-align: right">Actions</span></div>
+<div role="row" style="{{s.trow}}"><span>Today 00:54</span><span style="font-weight: 500">Quarterly report.pdf · 3 pp</span><span style="{{s.mutedSm}}">Colour · Normal · Letter · Plain</span><span style="{{s.pillOk}}">Printed</span><span style="display: flex; gap: 6px; justify-content: flex-end"><button style="{{s.btnSm}}">Print again</button><button style="{{s.btnSm}}">Show file</button></span></div>
+<div role="row" style="{{s.trow}}"><span>Today 00:41</span><span style="font-weight: 500">Insurance claim form.pdf · 2 pp</span><span style="{{s.mutedSm}}">B&amp;W · Normal · Letter · Plain</span><span style="{{s.pillErr}}">Stopped: USB link dropped</span><span style="display: flex; gap: 6px; justify-content: flex-end"><button style="{{s.btnSm}}" onClick="{{go.trouble}}">Troubleshoot</button><button style="{{s.btnSm}}">Print again</button></span></div>
+<div role="row" style="{{s.trow}}"><span>Yesterday 18:20</span><span style="font-weight: 500">Boarding pass.pdf · 1 p</span><span style="{{s.mutedSm}}">B&amp;W · Draft · Letter · Plain</span><span style="{{s.pillOk}}">Printed</span><span style="display: flex; gap: 6px; justify-content: flex-end"><button style="{{s.btnSm}}">Print again</button><button style="{{s.btnSm}}">Show file</button></span></div>
+<div role="row" style="{{s.trow}}"><span>28 Sep</span><span style="font-weight: 500">Garden photo.jpg · 1 p</span><span style="{{s.mutedSm}}">Colour · High · 4×6 in · Glossy · borderless</span><span style="{{s.pillOk}}">Printed</span><span style="display: flex; gap: 6px; justify-content: flex-end"><button style="{{s.btnSm}}">Print again</button><button style="{{s.btnSm}}">Show file</button></span></div>
+<div role="row" style="{{s.trow}}"><span>24 Sep</span><span style="font-weight: 500">Recipe.txt · 2 pp</span><span style="{{s.mutedSm}}">B&amp;W · Draft · Letter · Plain</span><span style="{{s.pillOk}}">Printed</span><span style="display: flex; gap: 6px; justify-content: flex-end"><button style="{{s.btnSm}}">Print again</button><button style="{{s.btnSm}}">Show file</button></span></div>
+<div role="row" style="{{s.trow}}"><span>22 Sep</span><span style="font-weight: 500">Quality test page · 1 p</span><span style="{{s.mutedSm}}">Colour · Normal · Letter · Plain</span><span style="{{s.pillOk}}">Printed</span><span style="display: flex; gap: 6px; justify-content: flex-end"><button style="{{s.btnSm}}">Print again</button></span></div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{v.acEmpty}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.empty}}">
+<div style="{{s.emptyIcon}}"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></div>
+<h2 style="{{s.h2}}">Nothing printed yet</h2>
+<p style="{{s.pMuted}}">Each print appears here with the settings used, so you can print it again in one click.</p>
+<button style="{{s.btnPrimary}}" onClick="{{go.print}}">Go to Print</button>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<!-- ============ PRINTER ============ -->
+<sc-if value="{{v.printer}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.page}}">
+<sc-if value="{{v.prOk}}" hint-placeholder-val="{{ true }}">
+<div style="{{s.hero}}">
+<div style="{{s.heroIconOk}}"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+<span style="{{s.display}}">Ready</span>
+<span>Canon TR150 series · USB port 3-1 · high speed · printing directly</span>
+<span style="{{s.muted}}">Checked 4 s ago. LinPrinter checks every 5 s while this page is open.</span>
+</div>
+<button style="{{s.btn}}">Identify</button>
+<button style="{{s.btn}}">Check again</button>
+</div>
+</sc-if>
+<sc-if value="{{v.prErr}}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="{{s.heroErr}}">
+<div style="{{s.heroIconErr}}"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 7H7a5 5 0 0 0 0 10h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h2M14 12h2"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0">
+<span style="{{s.display}}">Can't reach</span>
+<span>The printer keeps dropping off USB: 14 connection errors and 3 disconnects on port 3-3 in the last 10 minutes.</span>
+<span style="font-weight: 500">Most likely the cable, even one that worked for a while. Try another USB cable first.</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<button style="{{s.btnPrimary}}" onClick="{{go.trouble}}">Start troubleshooter</button>
+<button style="{{s.btn}}">Test connection</button>
+</div>
+</div>
+<div role="status" style="{{s.bannerAttn}}">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.cAttn}}"><path d="M12 3.5l9 16h-18z"></path><path d="M12 10v4M12 17v.5"></path></svg>
+<span style="flex-grow: 1">A system print queue, <strong style="font-weight: 500">Canon_TR150_series_USB</strong>, sends jobs to a serial port (serial:/dev/ttyS0) instead of this printer, so Print in other apps fails.</span>
+<button style="{{s.btnSm}}">Remove it…</button>
+</div>
+</sc-if>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+<div style="{{s.card}}">
+<div style="{{s.cardHead}}"><h2 style="{{s.h2}}">Ink and paper</h2><sc-if value="{{v.prErr}}" hint-placeholder-val="{{ false }}"><span style="{{s.mutedSm}}">last known, 10 min ago</span></sc-if></div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; justify-content: space-between"><span>Colour</span><span style="font-weight: 500">60%</span></div>
+<div style="{{s.gauge}}" role="meter" aria-label="Colour ink" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"><div style="width: 60%; display: flex; flex-direction: column"><div style="flex-grow: 1; background: #00a3e0"></div><div style="flex-grow: 1; background: #e5007e"></div><div style="flex-grow: 1; background: #ffd400"></div></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; justify-content: space-between"><span>Black</span><span style="font-weight: 500">80%</span></div>
+<div style="{{s.gauge}}" role="meter" aria-label="Black ink" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"><div style="width: 80%; background: #16181a"></div></div>
+</div>
+<div style="{{s.kv}}"><span style="{{s.muted}}">Paper</span><span>Letter, rear tray</span></div>
+<div style="{{s.kv}}"><span style="{{s.muted}}">Warn at</span><span>15% (Settings)</span></div>
+<div><button style="{{s.btnSm}}">Ink details on the printer's page</button></div>
+</div>
+
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">Connection</h2>
+<div style="{{s.kv}}"><span style="{{s.muted}}">Port</span><span>{{v.port}}</span></div>
+<div style="{{s.kv}}"><span style="{{s.muted}}">Route</span><span>Direct, driverless IPP</span></div>
+<sc-if value="{{v.prOk}}" hint-placeholder-val="{{ true }}">
+<div style="{{s.kv}}"><span style="{{s.muted}}">Link errors</span><span style="{{s.okText}}">None in 10 min</span></div>
+<div style="{{s.kv}}"><span style="{{s.muted}}">Last test</span><span>0 of 200 failed · 00:49</span></div>
+<div style="{{s.kv}}"><span style="{{s.muted}}">System queue</span><span>OK, points here</span></div>
+</sc-if>
+<sc-if value="{{v.prErr}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.kv}}"><span style="{{s.muted}}">Link errors</span><span style="{{s.errText}}">14 errors, 3 drops</span></div>
+<div style="{{s.kv}}"><span style="{{s.muted}}">Last test</span><span style="{{s.errText}}">27 of 200 failed</span></div>
+<div style="{{s.kv}}"><span style="{{s.muted}}">System queue</span><span style="{{s.attnText}}">Points at a serial port</span></div>
+</sc-if>
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><button style="{{s.btnSm}}">Test connection</button><button style="{{s.btnSm}}">Reconnect…</button></div>
+</div>
+
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">Look after the printer</h2>
+<sc-if value="{{v.prOk}}" hint-placeholder-val="{{ true }}">
+<button style="{{s.listBtn}}"><span style="font-weight: 500">Print a quality page</span><span style="{{s.mutedSm}}">Colour blocks, grey ramp, fine lines</span></button>
+<button style="{{s.listBtn}}"><span style="font-weight: 500">Print a line page</span><span style="{{s.mutedSm}}">Checks alignment for each ink</span></button>
+<button style="{{s.listBtn}}"><span style="font-weight: 500">Look first</span><span style="{{s.mutedSm}}">Preview a test page before printing it</span></button>
+<button style="{{s.listBtn}}"><span style="font-weight: 500">Printer's own settings page</span><span style="{{s.mutedSm}}">Cleaning, alignment, power-off timer</span></button>
+</sc-if>
+<sc-if value="{{v.prErr}}" hint-placeholder-val="{{ false }}">
+<p style="{{s.pMuted}}">Test pages, cleaning and the printer's own page need a working connection. Fix the connection first.</p>
+<button style="{{s.btnPrimarySm}}" onClick="{{go.trouble}}">Start troubleshooter</button>
+</sc-if>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">The printer's own defaults</h2>
+<span>Colour · Normal · Letter · Plain paper · fit to page</span>
+<div><button style="{{s.btnSm}}">Use these in LinPrinter</button></div>
+</div>
+<div style="{{s.card}}">
+<div style="{{s.cardHead}}"><h2 style="{{s.h2}}">Details</h2><button style="{{s.btnGhost}}" aria-expanded="false">Show all</button></div>
+<span>22 paper sizes · 15 paper types · one-sided · 1–99 copies</span>
+<span style="{{s.muted}}">Firmware 2.060 · Canon TR150 series · IPP 2.0</span>
+</div>
+</div>
+</div>
+</sc-if>
+
+<!-- ============ TROUBLESHOOTER ============ -->
+<sc-if value="{{v.trouble}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.page}}">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div><h1 style="{{s.h1}}">Fix the printer connection</h1><p style="{{s.pMuted}}">Cheapest checks first. Stops at the first step that works.</p></div>
+<button style="{{s.btn}}" onClick="{{go.printer}}">Close</button>
+</div>
+<ol aria-label="Steps" style="{{s.steps}}">
+<li style="{{s.stepDone}}"><span style="{{s.stepNumDone}}">✓</span>Power and cable seated</li>
+<li style="{{v.step2}}"><span style="{{v.step2num}}">{{v.step2mark}}</span>Another USB cable</li>
+<li style="{{v.step3}}"><span style="{{v.step3num}}">3</span>Test the link</li>
+<li style="{{s.stepNext}}"><span style="{{s.stepNumNext}}">4</span>Power-cycle</li>
+<li style="{{s.stepNext}}"><span style="{{s.stepNumNext}}">5</span>Another socket</li>
+<li style="{{s.stepNext}}"><span style="{{s.stepNumNext}}">6</span>System queues</li>
+</ol>
+<sc-if value="{{v.trCable}}" hint-placeholder-val="{{ true }}">
+<div style="display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px">
+<div style="{{s.cardLg}}">
+<h2 style="{{s.h2}}">Step 2: try another USB cable</h2>
+<p style="margin: 0">A cable is the cheapest thing to rule out, and the most common cause. On this printer, two faulty cables caused every connection failure for a week, including one that worked for a few minutes before failing.</p>
+<ol style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px">
+<li>Use a short USB 2.0 printer cable (A to B), under 2 m.</li>
+<li>Plug it straight into the computer, not into a hub or extension.</li>
+<li>Wait a few seconds. LinPrinter notices the printer by itself.</li>
+</ol>
+<div style="display: flex; gap: 8px; margin-top: 6px">
+<button style="{{s.btnPrimary}}" onClick="{{go.result}}">I've changed it: check now</button>
+<button style="{{s.btn}}">Skip this step</button>
+</div>
+</div>
+<div style="{{s.cardLg}}">
+<h2 style="{{s.h2}}">What LinPrinter sees now</h2>
+<div style="{{s.bannerErr}}"><span>Port 3-3: <strong style="font-weight: 500">14 connection errors, 3 disconnects</strong> in 10 minutes.</span></div>
+<div style="{{s.bannerOk}}"><span>Your USB hub on the same controller: <strong style="font-weight: 500">no errors</strong>.</span></div>
+<p style="{{s.pMuted}}">So the computer's USB is working. The fault is between the computer and the printer: cable first, then the socket, then the printer's own port.</p>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{v.trResult}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.cardLg}}">
+<h2 style="{{s.h2}}">Step 3: test the link</h2>
+<p style="margin: 0">LinPrinter sent 200 small, harmless requests to each device and counted the failures. Nothing was printed or changed. The test asked for your password once.</p>
+<div style="display: flex; flex-direction: column; gap: 12px; margin-top: 4px">
+<div style="{{s.resultRow}}"><span>Printer, new cable</span><div style="{{s.resultTrack}}"><div style="{{s.resultOk}}"></div></div><span style="{{s.okText}}">0 of 200 failed</span></div>
+<div style="{{s.resultRow}}"><span>USB hub (comparison)</span><div style="{{s.resultTrack}}"><div style="{{s.resultOk}}"></div></div><span style="{{s.okText}}">0 of 200 failed</span></div>
+<div style="{{s.resultRow}}"><span style="{{s.muted}}">Printer, previous cable</span><div style="{{s.resultTrack}}"><div style="{{s.resultErr}}"></div></div><span style="{{s.errText}}">27 of 200 failed</span></div>
+</div>
+<div role="status" style="{{s.bannerOk}}">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.cOk}}"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l2.5 2.5L16 9.5"></path></svg>
+<span><strong style="font-weight: 500">The connection is healthy now.</strong> The previous cable was the problem: keep it out of use.</span>
+</div>
+<div style="display: flex; gap: 8px">
+<button style="{{s.btnPrimary}}" onClick="{{go.print}}">Done: back to Print</button>
+<button style="{{s.btn}}">Test again</button>
+</div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<!-- ============ SETTINGS ============ -->
+<sc-if value="{{v.settings}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.page}}">
+<h1 style="{{s.h1}}">Settings</h1>
+<div style="display: flex; gap: 24px; min-height: 0; flex-grow: 1">
+<nav aria-label="Settings sections" style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px">
+<button style="{{tab.appearance}}" onClick="{{go.tabAppearance}}">Appearance</button>
+<button style="{{tab.printing}}" onClick="{{go.tabPrinting}}">Printing</button>
+<button style="{{tab.privacy}}" onClick="{{go.tabPrivacy}}">Privacy and diagnostics</button>
+<button style="{{tab.about}}" onClick="{{go.tabAbout}}">About</button>
+</nav>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+<sc-if value="{{v.stApp}}" hint-placeholder-val="{{ true }}">
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">Theme</h2>
+<div role="radiogroup" aria-label="Theme" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+<label style="{{s.themeOn}}"><input type="radio" name="theme" style="position: absolute; opacity: 0">
+<div style="height: 64px; border-radius: 6px; display: flex; overflow: hidden; border: 1px solid #7a8a83"><div style="flex-grow: 1; background: #f4f6f5; display: flex; align-items: flex-end; padding: 6px"><span style="width: 34px; height: 12px; border-radius: 3px; background: #1f7a4d"></span></div><div style="flex-grow: 1; background: #1c1f23; display: flex; align-items: flex-end; padding: 6px"><span style="width: 34px; height: 12px; border-radius: 3px; background: #4c9dff"></span></div></div>
+<span style="font-weight: 500">Follow the system</span><span style="{{s.mutedSm}}">Light or dark with Cinnamon</span></label>
+<label style="{{s.themeOff}}"><input type="radio" name="theme" style="position: absolute; opacity: 0">
+<div style="height: 64px; border-radius: 6px; background: #f4f6f5; border: 1px solid #7a8a83; display: flex; align-items: flex-end; padding: 6px; gap: 6px"><span style="flex-grow: 1; height: 30px; border-radius: 4px; background: #ffffff; border: 1px solid #d5dcd8"></span><span style="width: 34px; height: 12px; border-radius: 3px; background: #1f7a4d"></span></div>
+<span style="font-weight: 500">Mint Daylight</span><span style="{{s.mutedSm}}">Calm, light, green accent</span></label>
+<label style="{{s.themeOff}}"><input type="radio" name="theme" style="position: absolute; opacity: 0">
+<div style="height: 64px; border-radius: 6px; background: #1c1f23; border: 1px solid #7d8590; display: flex; align-items: flex-end; padding: 6px; gap: 6px"><span style="flex-grow: 1; height: 30px; border-radius: 4px; background: #262a30"></span><span style="width: 34px; height: 12px; border-radius: 3px; background: #4c9dff"></span></div>
+<span style="font-weight: 500">Graphite Night</span><span style="{{s.mutedSm}}">Neutral dark, blue accent</span></label>
+<label style="{{s.themeOff}}"><input type="radio" name="theme" style="position: absolute; opacity: 0">
+<div style="height: 64px; border-radius: 6px; background: #f6f1e7; border: 1px solid #857a68; display: flex; align-items: flex-end; padding: 6px; gap: 6px"><span style="flex-grow: 1; height: 30px; border-radius: 4px; background: #fffdf8; border: 1px solid #e3dccd"></span><span style="width: 34px; height: 12px; border-radius: 3px; background: #3a3a9e"></span></div>
+<span style="font-weight: 500">Paper &amp; Ink</span><span style="{{s.mutedSm}}">Warm cream, indigo ink</span></label>
+<label style="{{s.themeOff}}"><input type="radio" name="theme" style="position: absolute; opacity: 0">
+<div style="height: 64px; border-radius: 6px; background: #101820; border: 1px solid #6f8296; display: flex; align-items: flex-end; padding: 6px; gap: 6px"><span style="flex-grow: 1; height: 30px; border-radius: 4px; background: #17222d"></span><span style="width: 34px; height: 12px; border-radius: 3px; background: #00b7eb"></span></div>
+<span style="font-weight: 500">CMYK Studio</span><span style="{{s.mutedSm}}">Dark, cyan accent</span></label>
+<label style="{{s.themeOff}}"><input type="radio" name="theme" style="position: absolute; opacity: 0">
+<div style="height: 64px; border-radius: 6px; background: #000000; border: 2px solid #ffffff; display: flex; align-items: flex-end; padding: 6px; gap: 6px"><span style="flex-grow: 1; height: 30px; border-radius: 4px; border: 2px solid #ffffff"></span><span style="width: 34px; height: 12px; border-radius: 3px; background: #ffd400"></span></div>
+<span style="font-weight: 500">High Contrast</span><span style="{{s.mutedSm}}">Black, white, yellow; AAA</span></label>
+</div>
+</div>
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">Text and motion</h2>
+<div style="{{s.kv}}"><span>Text size</span><span style="{{s.muted}}">Follows your system font settings</span></div>
+<div style="{{s.kv}}"><span>Animations</span><span style="{{s.muted}}">Follow your system (on). Status updates never animate.</span></div>
+</div>
+</sc-if>
+
+<sc-if value="{{v.stPrint}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">Printing</h2>
+<div style="{{s.row}}"><label style="{{s.labelWide}}">Print to PDF folder</label><span style="flex-grow: 1">~/Documents/prints</span><button style="{{s.btnSm}}">Change…</button></div>
+<div style="{{s.row}}"><label style="{{s.labelWide}}">Warn about low ink at</label><div style="{{s.seg}}"><button style="{{s.segOff}}" aria-label="Lower">−</button><span style="{{s.stepVal}}">15%</span><button style="{{s.segOff}}" aria-label="Higher">+</button></div></div>
+<div style="{{s.row}}"><label style="{{s.labelWide}}">When LinPrinter starts</label><button style="{{s.select}}"><span>Use the last printer</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+</div>
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">Optional features</h2>
+<div style="{{s.row}}"><div style="flex-grow: 1; display: flex; flex-direction: column"><span style="font-weight: 500">Ink alerts</span><span style="{{s.mutedSm}}">Warns before printing when ink is at or below your level. It never blocks printing.</span></div><button role="switch" aria-checked="true" aria-label="Ink alerts" style="{{s.switchOn}}"><span style="{{s.knobOn}}"></span></button></div>
+<div style="{{s.row}}"><div style="flex-grow: 1; display: flex; flex-direction: column"><span style="font-weight: 500">Print profiles</span><span style="{{s.mutedSm}}">Save and reuse sets of options, such as Photo 4×6.</span></div><button role="switch" aria-checked="false" aria-label="Print profiles" style="{{s.switchOff}}"><span style="{{s.knob}}"></span></button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{v.stPriv}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">Everything stays on this computer</h2>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="{{s.checkLine}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.cOk}}"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Documents go only down the USB cable, or into your PDF folder.</span>
+<span style="{{s.checkLine}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.cOk}}"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>No network, no account, no telemetry, no update checks.</span>
+<span style="{{s.checkLine}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{s.cOk}}"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>No AI: LinPrinter doesn't use AI or generate content.</span>
+</div>
+</div>
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">What LinPrinter keeps</h2>
+<div style="{{s.kv}}"><span>Settings</span><span style="{{s.mono}}">~/.config/linprinter/settings.json</span></div>
+<div style="{{s.kv}}"><span>History</span><span style="{{s.mono}}">~/.local/share/linprinter/</span></div>
+<div style="{{s.kv}}"><span>Logs (serials and home folder removed)</span><span style="{{s.mono}}">~/.local/state/linprinter/logs/</span></div>
+<div style="display: flex; gap: 8px"><button style="{{s.btnSm}}">Save diagnostics…</button><button style="{{s.btnSm}}">Open logs folder</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{v.stAbout}}" hint-placeholder-val="{{ false }}">
+<div style="{{s.card}}">
+<h2 style="{{s.h2}}">LinPrinter 0.2.8</h2>
+<span>Document printer for Linux: driverless IPP over USB, a system queue as backup, and Print to PDF.</span>
+<div style="{{s.kv}}"><span>Licence</span><span>CC BY-NC 4.0</span></div>
+<div style="{{s.kv}}"><span>Icons</span><span>Phosphor (MIT)</span></div>
+<div style="display: flex; gap: 8px"><button style="{{s.btnSm}}">Keyboard shortcuts</button><button style="{{s.btnSm}}">Licence text</button></div>
+</div>
+</sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"screen":{"editor":"enum","default":"print-ready","options":["print-first","print-ready","print-more","print-needs","print-printing","print-printed","print-cant","activity","activity-empty","printer","printer-link","trouble-cable","trouble-result","settings-appearance","settings-printing","settings-privacy","settings-about"]},"theme":{"editor":"enum","default":"mint","options":["mint","graphite","paper","cmyk","contrast"]},"narrow":{"editor":"boolean","default":false},"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const THEMES = {
+      mint: {bg:'#f4f6f5', surface:'#ffffff', border:'#d5dcd8', borderStrong:'#7a8a83', text:'#1b2420', muted:'#4f5d57', accent:'#1f7a4d', onAccent:'#ffffff', accentSoft:'#e3f1e9', focus:'#1559b8', ok:'#1f7a4d', okBg:'#e3f1e9', busy:'#1559b8', busyBg:'#e4ecf8', attn:'#8a5300', attnBg:'#fbefd9', err:'#b3261e', errBg:'#fbe4e2', rail:'#e9eeeb', w:'500'},
+      graphite: {bg:'#1c1f23', surface:'#262a30', border:'#3a4048', borderStrong:'#7d8590', text:'#eceff3', muted:'#aab2bd', accent:'#4c9dff', onAccent:'#0b1320', accentSoft:'#1f3350', focus:'#ffd75e', ok:'#5fd38d', okBg:'#1d3a2a', busy:'#7cb7ff', busyBg:'#1f3350', attn:'#ffbf4d', attnBg:'#3d3220', err:'#ff8a80', errBg:'#3f2422', rail:'#17191d', w:'500'},
+      paper: {bg:'#f6f1e7', surface:'#fffdf8', border:'#e3dccd', borderStrong:'#857a68', text:'#22201c', muted:'#5a5348', accent:'#3a3a9e', onAccent:'#ffffff', accentSoft:'#e7e6f5', focus:'#b8431b', ok:'#2d6a3e', okBg:'#e2efe4', busy:'#3a3a9e', busyBg:'#e7e6f5', attn:'#8a4b00', attnBg:'#f7e8cf', err:'#a4262c', errBg:'#f7e1e1', rail:'#efe8da', w:'500'},
+      cmyk: {bg:'#101820', surface:'#17222d', border:'#26384a', borderStrong:'#6f8296', text:'#f2f6fa', muted:'#a9b8c7', accent:'#00b7eb', onAccent:'#06121a', accentSoft:'#0c3346', focus:'#ff4fa3', ok:'#4fd18b', okBg:'#133524', busy:'#00b7eb', busyBg:'#0c3346', attn:'#ffd23f', attnBg:'#3a3214', err:'#ff7a7a', errBg:'#3d1c22', rail:'#0b1218', w:'500'},
+      contrast: {bg:'#000000', surface:'#000000', border:'#ffffff', borderStrong:'#ffffff', text:'#ffffff', muted:'#e6e6e6', accent:'#ffd400', onAccent:'#000000', accentSoft:'#332b00', focus:'#00e5ff', ok:'#7dff9b', okBg:'#000000', busy:'#7fd4ff', busyBg:'#000000', attn:'#ffd400', attnBg:'#000000', err:'#ff9e9e', errBg:'#000000', rail:'#000000', w:'700'}
+    };
+    const TITLES = {print:'Print', activity:'Activity', printer:'Printer', trouble:'Troubleshooter', settings:'Settings'};
+    const t = THEMES[this.props.theme] || THEMES.mint;
+    const screen = this.state.screen || this.props.screen || 'print-ready';
+    const narrow = !!this.props.narrow;
+    const W = narrow ? 720 : 1280;
+    const railW = narrow ? 72 : 88;
+    const section = screen.split('-')[0];
+    const tabFromScreen = screen.indexOf('settings-') === 0 ? screen.slice(9) : 'appearance';
+    const tabName = this.state.tab || tabFromScreen;
+    const go = (scr) => () => this.setState({ screen: scr, tab: null });
+    const setTab = (name) => () => this.setState({ tab: name });
+
+    const pFirst = screen === 'print-first', pMore = screen === 'print-more', pNeeds = screen === 'print-needs';
+    const pPrinting = screen === 'print-printing', pPrinted = screen === 'print-printed', pCant = screen === 'print-cant';
+    const prErr = screen === 'printer-link' || screen === 'trouble-cable' || pCant;
+    let st = 'ok';
+    if (pFirst) st = 'none'; else if (pPrinting) st = 'busy'; else if (pNeeds) st = 'attn'; else if (prErr) st = 'err';
+    const chipLabels = { ok: 'Canon TR150 · Ready', busy: 'Canon TR150 · Busy', attn: 'Canon TR150 · Needs you', err: "Canon TR150 · Can't reach", none: 'No printer yet' };
+    const chipBg = { ok: t.okBg, busy: t.busyBg, attn: t.attnBg, err: t.errBg, none: t.surface };
+    const chipBorder = { ok: t.ok, busy: t.busy, attn: t.attn, err: t.err, none: t.borderStrong };
+    const hasDoc = !pFirst;
+    const canPrint = hasDoc && st === 'ok' && !pPrinted && !pPrinting;
+    const cantPrint = !canPrint && !pPrinting && !pPrinted;
+    const whyNot = pFirst ? 'Open a document and connect a printer first' : pNeeds ? 'Load paper first' : pCant ? 'Fix the connection first' : '';
+
+    const font = "Ubuntu, 'Ubuntu Sans', system-ui, sans-serif";
+    const btnBase = `border-radius:6px;font-family:${font};font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;white-space:nowrap;box-sizing:border-box`;
+    const navItem = (on) => `width:100%;min-height:${narrow ? 60 : 68}px;border:none;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-family:${font};background:${on ? t.accentSoft : 'transparent'};color:${on ? t.accent : t.muted};${on ? 'outline:2px solid ' + t.accent + ';outline-offset:-2px;' : ''}`;
+    const tabItem = (on) => `height:40px;padding:0 14px;text-align:left;border:none;border-radius:6px;font-family:${font};font-size:14px;cursor:pointer;background:${on ? t.accentSoft : 'transparent'};color:${on ? t.text : t.muted};font-weight:${on ? t.w : '400'};${on ? 'outline:2px solid ' + t.accent + ';outline-offset:-2px;' : ''}`;
+    const segOn = `height:36px;padding:0 14px;border:none;background:${t.accent};color:${t.onAccent};font-family:${font};font-size:14px;font-weight:${t.w};cursor:pointer`;
+    const segOff = `height:36px;padding:0 14px;border:none;border-left:1px solid ${t.border};background:${t.surface};color:${t.text};font-family:${font};font-size:14px;cursor:pointer`;
+    const banner = (fg, bg) => `background:${bg};border:1px solid ${fg};border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;color:${t.text};font-size:14px`;
+    const stepItem = (kind) => `display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:20px;font-size:13px;background:${kind === 'now' ? t.accentSoft : 'transparent'};color:${kind === 'next' ? t.muted : t.text};border:1px solid ${kind === 'now' ? t.accent : t.border};font-weight:${kind === 'now' ? t.w : '400'}`;
+    const stepNum = (kind) => `width:22px;height:22px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:${kind === 'next' ? 'transparent' : t.accent};color:${kind === 'next' ? t.muted : t.onAccent};border:1px solid ${kind === 'next' ? t.borderStrong : t.accent}`;
+    const trResult = screen === 'trouble-result';
+
+    const s = {
+      root: `width:${W}px;height:860px;display:flex;flex-direction:column;background:${t.bg};color:${t.text};font-family:${font};font-size:14px;line-height:1.5;overflow:hidden`,
+      header: `height:52px;flex-shrink:0;display:flex;align-items:center;gap:12px;padding:0 16px;background:${t.surface};border-bottom:1px solid ${t.border}`,
+      brand: `display:flex;align-items:center;gap:10px;font-size:16px;font-weight:${t.w}`,
+      crumb: `color:${t.muted};font-weight:400`,
+      chip: `${btnBase};height:36px;padding:0 14px;border-radius:18px;background:${chipBg[st]};border:1px solid ${chipBorder[st]};color:${t.text};font-weight:${t.w}`,
+      iconBtn: `${btnBase};width:40px;height:40px;border:1px solid transparent;background:transparent;color:${t.text}`,
+      rail: `width:${railW}px;flex-shrink:0;display:flex;flex-direction:column;gap:6px;padding:10px 8px;box-sizing:border-box;background:${t.rail};border-right:1px solid ${t.border}`,
+      navLabel: `font-size:12px;font-weight:${t.w}`,
+      badge: `position:absolute;top:-6px;right:-10px;min-width:18px;height:18px;border-radius:9px;background:${t.busy};color:${t.bg};font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center`,
+      main: `flex-grow:1;min-width:0;display:flex;flex-direction:column;min-height:0`,
+      optcol: `width:${narrow ? W - railW : 476}px;flex-shrink:0;box-sizing:border-box;padding:18px 20px;display:flex;flex-direction:column;gap:12px;overflow:hidden`,
+      previewPane: `flex-grow:1;min-width:0;box-sizing:border-box;padding:18px 24px;display:flex;flex-direction:column;gap:14px;border-left:1px solid ${t.border}`,
+      card: `background:${t.surface};border:1px solid ${t.border};border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px`,
+      cardLg: `background:${t.surface};border:1px solid ${t.border};border-radius:10px;padding:20px 24px;display:flex;flex-direction:column;gap:12px`,
+      cardHead: `display:flex;align-items:center;justify-content:space-between;gap:8px`,
+      page: `flex-grow:1;min-height:0;box-sizing:border-box;padding:22px 28px;display:flex;flex-direction:column;gap:16px;overflow:hidden`,
+      h1: `margin:0;font-size:20px;line-height:28px;font-weight:${t.w}`,
+      h2: `margin:0;font-size:16px;line-height:24px;font-weight:${t.w}`,
+      display: `font-size:28px;line-height:36px;font-weight:${t.w}`,
+      muted: `color:${t.muted};font-size:13px`,
+      mutedSm: `color:${t.muted};font-size:12.5px`,
+      pMuted: `margin:0;color:${t.muted};font-size:14px`,
+      mono: `font-family:'Ubuntu Mono', monospace;font-size:13px;color:${t.muted}`,
+      label: `width:84px;flex-shrink:0;color:${t.muted}`,
+      labelWide: `width:200px;flex-shrink:0`,
+      row: `display:flex;align-items:center;gap:12px;min-height:36px`,
+      kv: `display:flex;justify-content:space-between;gap:12px;align-items:baseline`,
+      statusLine: `display:inline-flex;align-items:center;gap:6px;color:${t.text};font-size:13px`,
+      checkLine: `display:flex;align-items:center;gap:10px`,
+      iconTile: `width:44px;height:44px;flex-shrink:0;border-radius:10px;background:${t.accentSoft};color:${t.accent};display:flex;align-items:center;justify-content:center`,
+      btn: `${btnBase};height:40px;padding:0 14px;border:1px solid ${t.borderStrong};background:${t.surface};color:${t.text}`,
+      btnSm: `${btnBase};height:32px;padding:0 12px;font-size:13px;border:1px solid ${t.borderStrong};background:${t.surface};color:${t.text}`,
+      btnPrimary: `${btnBase};height:40px;padding:0 16px;border:1px solid ${t.accent};background:${t.accent};color:${t.onAccent};font-weight:${t.w}`,
+      btnPrimarySm: `${btnBase};height:32px;padding:0 12px;font-size:13px;border:1px solid ${t.accent};background:${t.accent};color:${t.onAccent};font-weight:${t.w}`,
+      btnPrint: `${btnBase};height:48px;min-width:160px;padding:0 24px;font-size:16px;border:1px solid ${t.accent};background:${t.accent};color:${t.onAccent};font-weight:${t.w}`,
+      btnPrintOff: `${btnBase};height:48px;min-width:160px;padding:0 24px;font-size:16px;border:1px dashed ${t.borderStrong};background:transparent;color:${t.muted};cursor:not-allowed`,
+      btnDanger: `${btnBase};height:40px;padding:0 14px;border:1px solid ${t.err};background:${t.surface};color:${t.err};font-weight:${t.w}`,
+      btnGhost: `${btnBase};height:32px;padding:0 8px;border:none;background:transparent;color:${t.accent};font-weight:${t.w};text-decoration:underline;text-underline-offset:3px`,
+      kbdOnAccent: `font-family:'Ubuntu Mono', monospace;font-size:12px;padding:1px 6px;border-radius:4px;border:1px solid currentColor;opacity:0.85`,
+      seg: `display:inline-flex;align-items:stretch;border:1px solid ${t.borderStrong};border-radius:6px;overflow:hidden`,
+      segOn, segOff,
+      stepVal: `min-width:44px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid ${t.border};background:${t.surface};font-variant-numeric:tabular-nums`,
+      select: `${btnBase};justify-content:space-between;flex-grow:1;height:36px;padding:0 12px;border:1px solid ${t.borderStrong};background:${t.surface};color:${t.text}`,
+      inputFocus: `height:36px;width:120px;box-sizing:border-box;padding:0 10px;border-radius:6px;border:1px solid ${t.borderStrong};background:${t.surface};color:${t.text};font-family:${font};font-size:14px;outline:2px solid ${t.focus};outline-offset:2px`,
+      paperThumb: `width:17px;height:22px;border:1px solid ${t.borderStrong};background:#ffffff;border-radius:2px`,
+      switchOff: `width:44px;height:24px;border-radius:12px;background:${t.bg};border:1px solid ${t.borderStrong};display:inline-flex;align-items:center;padding:2px;box-sizing:border-box;flex-shrink:0`,
+      switchOn: `width:44px;height:24px;border-radius:12px;background:${t.accent};border:1px solid ${t.accent};display:inline-flex;align-items:center;justify-content:flex-end;padding:2px;box-sizing:border-box;flex-shrink:0`,
+      knob: `width:18px;height:18px;border-radius:9px;background:${t.borderStrong}`,
+      knobOn: `width:18px;height:18px;border-radius:9px;background:${t.onAccent}`,
+      divider: `height:1px;background:${t.border}`,
+      dropzone: `border:2px dashed ${t.borderStrong};border-radius:10px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center`,
+      thumb: `width:52px;height:68px;border-radius:3px;border:1px solid ${t.borderStrong};background:#ffffff;color:#1b2420;font-family:${font};font-size:13px;cursor:pointer`,
+      thumbOn: `width:52px;height:68px;border-radius:3px;border:1px solid ${t.borderStrong};background:#ffffff;color:#1b2420;font-family:${font};font-size:13px;font-weight:700;cursor:pointer;outline:3px solid ${t.accent};outline-offset:2px`,
+      actionbar: `height:84px;flex-shrink:0;box-sizing:border-box;padding:0 24px;display:flex;align-items:center;gap:16px;background:${t.surface};border-top:1px solid ${t.border}`,
+      track: `height:8px;width:${narrow ? 200 : 320}px;border-radius:4px;background:${t.border};overflow:hidden`,
+      fill66: `height:100%;width:66%;background:${t.busy};border-radius:4px`,
+      doneMark: `width:44px;height:44px;border-radius:22px;background:${t.okBg};color:${t.ok};border:2px solid ${t.ok};display:flex;align-items:center;justify-content:center;flex-shrink:0`,
+      bannerAttn: banner(t.attn, t.attnBg),
+      bannerErr: banner(t.err, t.errBg),
+      bannerOk: banner(t.ok, t.okBg),
+      cAccent: `color:${t.accent}`, cOk: `color:${t.ok};flex-shrink:0`, cBusy: `color:${t.busy};flex-shrink:0`, cAttn: `color:${t.attn};flex-shrink:0`, cErr: `color:${t.err};flex-shrink:0`, cMuted: `color:${t.muted};flex-shrink:0`,
+      okText: `color:${t.ok};font-weight:${t.w}`, errText: `color:${t.err};font-weight:${t.w}`, attnText: `color:${t.attn};font-weight:${t.w}`,
+      thead: `display:grid;grid-template-columns:130px minmax(0,1.3fr) minmax(0,1.4fr) 190px 230px;gap:12px;padding:6px 4px;color:${t.muted};font-size:12.5px;border-bottom:1px solid ${t.border}`,
+      trow: `display:grid;grid-template-columns:130px minmax(0,1.3fr) minmax(0,1.4fr) 190px 230px;gap:12px;align-items:center;min-height:52px;padding:0 4px;border-bottom:1px solid ${t.border}`,
+      pillOk: `justify-self:start;padding:2px 10px;border-radius:12px;background:${t.okBg};color:${t.text};border:1px solid ${t.ok};font-size:12.5px`,
+      pillErr: `justify-self:start;padding:2px 10px;border-radius:12px;background:${t.errBg};color:${t.text};border:1px solid ${t.err};font-size:12.5px`,
+      empty: `flex-grow:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;background:${t.surface};border:1px solid ${t.border};border-radius:10px`,
+      emptyIcon: `width:72px;height:72px;border-radius:36px;background:${t.accentSoft};color:${t.accent};display:flex;align-items:center;justify-content:center`,
+      hero: `background:${t.surface};border:1px solid ${t.border};border-radius:14px;padding:20px 24px;display:flex;align-items:center;gap:20px`,
+      heroErr: `background:${t.errBg};border:1px solid ${t.err};border-radius:14px;padding:20px 24px;display:flex;align-items:center;gap:20px`,
+      heroIconOk: `width:60px;height:60px;border-radius:30px;background:${t.okBg};color:${t.ok};border:2px solid ${t.ok};display:flex;align-items:center;justify-content:center;flex-shrink:0`,
+      heroIconErr: `width:60px;height:60px;border-radius:30px;background:${t.surface};color:${t.err};border:2px solid ${t.err};display:flex;align-items:center;justify-content:center;flex-shrink:0`,
+      gauge: `height:14px;border:1px solid ${t.borderStrong};border-radius:4px;overflow:hidden;background:${t.bg};display:flex`,
+      listBtn: `${btnBase};flex-direction:column;align-items:flex-start;gap:0;height:auto;min-height:48px;padding:6px 12px;border:1px solid ${t.border};background:${t.surface};color:${t.text};text-align:left`,
+      steps: `list-style:none;margin:0;padding:0;display:flex;gap:8px;flex-wrap:wrap`,
+      stepDone: stepItem('done'), stepNumDone: stepNum('done'), stepNext: stepItem('next'), stepNumNext: stepNum('next'),
+      resultRow: `display:grid;grid-template-columns:200px minmax(0,1fr) 150px;gap:14px;align-items:center`,
+      resultTrack: `height:14px;border-radius:4px;background:${t.bg};border:1px solid ${t.borderStrong};overflow:hidden;display:flex`,
+      resultOk: `width:1.5%;background:${t.ok}`,
+      resultErr: `width:13.5%;background:${t.err}`,
+      themeOn: `position:relative;display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:10px;border:2px solid ${t.accent};background:${t.accentSoft};cursor:pointer`,
+      themeOff: `position:relative;display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:10px;border:1px solid ${t.border};background:${t.surface};cursor:pointer;margin:1px`
+    };
+
+    const v = {
+      title: TITLES[section] || 'Print',
+      print: section === 'print', activity: section === 'activity', printer: section === 'printer', trouble: section === 'trouble', settings: section === 'settings',
+      pFirst, pMore, notMore: !pMore, pNeeds, pPrinting, pPrinted, pCant,
+      hasPrinter: !pFirst, hasDoc, canPrint, cantPrint, whyNot,
+      barIdle: !pPrinting && !pPrinted,
+      narrow, wide: !narrow,
+      stOk: st === 'ok', stBusy: st === 'busy', stAttn: st === 'attn', stErr: st === 'err', stNone: st === 'none',
+      chipLabel: chipLabels[st],
+      summaryHead: pMore ? '1 copy · pages 1-2 (2 pages)' : '1 copy · 3 pages',
+      summary: hasDoc ? 'Colour · Normal · Letter (8.5 × 11 in) · Plain paper · fit to page' : 'Nothing to print yet',
+      allOn: pMore ? 'false' : 'true', rangeOn: pMore ? 'true' : 'false',
+      segAll: pMore ? segOff : segOn, segRange: pMore ? segOn : segOff,
+      acFull: screen === 'activity', acEmpty: screen === 'activity-empty',
+      prOk: screen === 'printer', prErr: screen === 'printer-link',
+      port: screen === 'printer-link' ? '3-3 · USB 2.0' : '3-1 · USB 2.0, 480 Mbit/s',
+      trCable: screen === 'trouble-cable', trResult,
+      step2: stepItem(trResult ? 'done' : 'now'), step2num: stepNum(trResult ? 'done' : 'now'), step2mark: trResult ? '✓' : '2',
+      step3: stepItem(trResult ? 'now' : 'next'), step3num: stepNum(trResult ? 'now' : 'next'),
+      stApp: tabName === 'appearance', stPrint: tabName === 'printing', stPriv: tabName === 'privacy', stAbout: tabName === 'about'
+    };
+    const nav = { print: navItem(v.print), activity: navItem(v.activity), printer: navItem(v.printer || v.trouble), settings: navItem(v.settings) };
+    const cur = { print: v.print ? 'page' : 'false', activity: v.activity ? 'page' : 'false', printer: (v.printer || v.trouble) ? 'page' : 'false', settings: v.settings ? 'page' : 'false' };
+    const tab = { appearance: tabItem(v.stApp), printing: tabItem(v.stPrint), privacy: tabItem(v.stPriv), about: tabItem(v.stAbout) };
+    return {
+      t, s, v, nav, cur, tab,
+      go: {
+        print: go('print-ready'), activity: go('activity'), printer: go('printer'), settings: go('settings-appearance'),
+        trouble: go('trouble-cable'), result: go('trouble-result'), printing: go('print-printing'),
+        tabAppearance: setTab('appearance'), tabPrinting: setTab('printing'), tabPrivacy: setTab('privacy'), tabAbout: setTab('about')
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

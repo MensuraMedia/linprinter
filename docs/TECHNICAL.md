@@ -92,3 +92,17 @@ simulates paper-out and similar states. CUPS' `ipptool get-printer-attributes.te
   `LINPRINTER_ALLOW_ROOT=1` lets it run as root, for container tests only.
 - Verified offline in `ubuntu:24.04 --network none`: the dependencies from the pool, then the package
   (`linprinter --version`, `--list-printers`), and both installer modes, including re-runs and uninstall.
+
+## User interface (0.3.0)
+- GTK 3 with lin-dashboard-theme (`src/lintheme`, vendored): `tokens.py` is the only source of
+  colours, type, space and sizes; `css.build_css(3)` turns them into one stylesheet installed at
+  application priority; `ui/app_css.py` maps LinPrinter's own class names onto the same tokens.
+- Status vocabulary: `manager_status.chip_key(level, state, reasons)` → ok / busy / attention /
+  error (Ready · Busy · Needs you · Can't reach). A printer that answers with a problem is Needs you;
+  only no answer is Can't reach.
+- The Print button is enabled only when printing can work; `PrintPage.update_print_button` puts the
+  reason beside it. History results come from the job's final state (`JOB_RESULT_WORDS`).
+- Test connection: `PrintManager.link_test` asks Get-Printer-Attributes(printer-state) 20 times through
+  `backend_ipp.ping` and returns `{asked, failed, seconds, when}`.
+- Layout: two panes from 960 px; below that the preview moves into a card. The window shrinks to
+  720 × 540 (tested: minimum width ≤ 900).

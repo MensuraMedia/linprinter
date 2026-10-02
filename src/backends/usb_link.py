@@ -12,8 +12,10 @@ it the answer is simply "nothing known". Only port numbers and USB ids are
 kept, never serial numbers.
 """
 
+import os
 import re
 import subprocess
+import time
 
 WINDOW_MINUTES = 10
 ERRORS_FAILING = 2  # connection errors in the window that count as a failing link
@@ -48,23 +50,51 @@ def parse(text):
 
 
 def kernel_log(minutes=WINDOW_MINUTES):
-    """Kernel messages of the last few minutes ("" if the journal can't be read)"""
+    """Kernel messages of the last few minutes ("" if the journal can't be read; see log_readable)"""
     try:
         r = subprocess.run(
-            ["journalctl", "-k", "-q", "--no-pager", "-o", "cat", "--since", f"-{minutes}min"],
+            ["journalctl", "-k", "--no-pager", "-o", "cat", "--since", f"-{minutes}min"],
             capture_output=True,
             text=True,
             errors="replace",
             timeout=5,
+            env={**os.environ, "LC_ALL": "C"},  # the hints below are matched in English
         )
     except (OSError, subprocess.SubprocessError):
+        _state["readable"] = False
         return ""
-    return r.stdout if r.returncode == 0 else ""
+    # without the right group journalctl still exits 0, leaves the kernel's messages out and says so
+    # on stderr ("not seeing messages from other users and the system"): that is unreadable, not quiet
+    hidden = any(
+        w in r.stderr for w in ("not seeing messages", "insufficient permissions", "No journal files")
+    )
+    _state["readable"] = r.returncode == 0 and not hidden
+    return r.stdout if _state["readable"] else ""
 
 
-def recent(minutes=WINDOW_MINUTES):
-    """parse() of the recent kernel log"""
-    return parse(kernel_log(minutes))
+# the last reading: pages ask often (every status check, every redraw), the journal needn't be read each time
+_state = {"readable": None, "at": 0.0, "stats": {}}
+CACHE_SECONDS = 4
+
+
+def recent(minutes=WINDOW_MINUTES, max_age=CACHE_SECONDS):
+    """parse() of the recent kernel log (a reading up to max_age seconds old is reused; tests: max_age=0)"""
+    now = time.monotonic()
+    if max_age and _state["readable"] is not None and now - _state["at"] < max_age:
+        return _state["stats"]
+    stats = parse(kernel_log(minutes))
+    _state.update(at=now, stats=stats)
+    return stats
+
+
+def cached():
+    """The last reading, without reading the journal (for the GTK thread; workers call recent())"""
+    return _state["stats"]
+
+
+def log_readable():
+    """True / False, or None before the first reading (then say "checking", not "can't be read")"""
+    return _state["readable"]
 
 
 def failing(port, stats):
@@ -94,8 +124,8 @@ def unidentified_failing_ports(stats):
 # the printer, the host and the software were blamed in turn. A cable that works for a minute
 # is not cleared.
 CABLE_ADVICE = (
-    "Try another USB cable first - a faulty cable was the cause before, even one that worked for "
-    "a while - plugged straight into the computer, then turn the printer off and on. No driver or "
+    "Try another USB cable first — a faulty cable was the cause before, even one that worked for "
+    "a while — plugged straight into the computer, then turn the printer off and on. No driver or "
     "setting fixes this."
 )
 

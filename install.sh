@@ -21,7 +21,7 @@ export LC_ALL=C
 APP_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 REPO_ROOT="$(cd "$APP_DIR/.." && pwd)"
 DESKTOP="${XDG_DATA_HOME:-$HOME/.local/share}/applications/linprinter.desktop"
-PACKAGES=(python3 python3-gi python3-gi-cairo gir1.2-gtk-3.0 python3-pil cups cups-client cups-filters cups-ipp-utils ipp-usb ghostscript fontconfig fonts-dejavu-core librsvg2-common)
+PACKAGES=(python3 python3-gi python3-gi-cairo gir1.2-gtk-3.0 python3-pil cups cups-client cups-filters cups-ipp-utils ipp-usb ghostscript fontconfig fonts-dejavu-core librsvg2-common fonts-ubuntu)
 
 if [[ $EUID -eq 0 && "${LINPRINTER_ALLOW_ROOT:-}" != 1 ]]; then  # LINPRINTER_ALLOW_ROOT=1: container tests only
     echo "Run this as your normal user (without sudo) - the menu entry is per-user."; exit 1

@@ -156,3 +156,137 @@ def test_test_page_and_defaults(setup):
     assert recent_entries() == []  # test pages are not added to Recent
     applied = pm.use_printer_defaults(printer)
     assert pm.settings.get("paper") == applied["size"]
+
+
+def test_refused_because_paper_ran_out_does_not_fall_back(setup):
+    """Paper runs out between the check and Print-Job: say so in words, and don't try the CUPS queue"""
+    from backends.backend_base import Method, PrintError
+
+    class EmptiesTray:
+        calls = 0
+
+        def status(self, _target):
+            self.calls += 1
+            return ("idle", [], []) if self.calls == 1 else ("stopped", ["media-empty-error"], [])
+
+        def submit(self, *args):
+            raise PrintError("Print-Job failed (server-error-not-accepting-jobs)", "busy")
+
+    class Spooler:
+        submitted = []
+
+        def status(self, _target):
+            return "idle", [], []
+
+        def submit(self, *args):
+            self.submitted.append(args)
+            return "Q-1"
+
+    _t, pm, doc, _tmp = setup
+    printer = pm.discover()[0]
+    spooler = Spooler()
+    printer.methods = [
+        Method("P1", EmptiesTray(), "ipp://127.0.0.1:60000/ipp/print"),
+        Method("P2", spooler, "Q"),
+    ]
+    pm.open_document(doc)
+    box = run(pm, printer, pm.ticket(printer, {}), [1])
+    assert "paper" in box["error"].lower() and "server-error" not in box["error"]
+    assert spooler.submitted == []
+
+
+def test_a_refusal_is_said_in_plain_words(setup):
+    """No raw IPP status in what the user reads"""
+    from backends.backend_base import Method, PrintError
+
+    class Refuses:
+        def status(self, _target):
+            return "idle", [], []
+
+        def submit(self, *args):
+            raise PrintError("Print-Job failed (client-error-document-format-not-supported)", "unsupported")
+
+    _t, pm, doc, _tmp = setup
+    printer = pm.discover()[0]
+    printer.methods = [Method("P1", Refuses(), "ipp://127.0.0.1:60000/ipp/print")]
+    pm.open_document(doc)
+    box = run(pm, printer, pm.ticket(printer, {}), [1])
+    assert box["error"] == "The printer can't print with these settings. Try other paper or quality."
+
+
+def _two_methods(setup, first):
+    from backends.backend_base import Method
+
+    class Spooler:
+        submitted = []
+
+        def status(self, _target):
+            return "idle", [], []
+
+        def submit(self, *args):
+            self.submitted.append(args)
+            return "Q-1"
+
+    _t, pm, doc, _tmp = setup
+    printer = pm.discover()[0]
+    spooler = Spooler()
+    printer.methods = [Method("P1", first, "ipp://127.0.0.1:60000/ipp/print"), Method("P2", spooler, "Q")]
+    pm.open_document(doc)
+    return pm, printer, spooler
+
+
+def test_link_dies_under_the_upload_does_not_fall_back(setup):
+    """Print-Job dies mid-upload and the link is gone: name the USB connection, don't use CUPS"""
+    from backends.backend_base import PrintError
+
+    class DiesMidUpload:
+        calls = 0
+
+        def status(self, _target):
+            self.calls += 1
+            if self.calls == 1:
+                return "idle", [], []
+            raise PrintError("The printer's USB connection isn't carrying data.", "link")
+
+        def submit(self, *args):
+            raise PrintError("Connection reset", "unreachable")
+
+    pm, printer, spooler = _two_methods(setup, DiesMidUpload())
+    box = run(pm, printer, pm.ticket(printer, {}), [1])
+    assert "USB connection" in box["error"] and spooler.submitted == []
+
+
+def test_printer_not_taking_jobs_is_final(setup):
+    """The printer says it isn't taking jobs (no reason the user can fix): no CUPS queue holding it"""
+    from backends.backend_base import PrintError
+
+    class Paused:
+        def status(self, _target):
+            return "stopped", [], []
+
+        def submit(self, *args):
+            raise PrintError("Print-Job failed (server-error-not-accepting-jobs)", "busy")
+
+    pm, printer, spooler = _two_methods(setup, Paused())
+    box = run(pm, printer, pm.ticket(printer, {}), [1])
+    assert box["error"].startswith("The printer isn't taking jobs") and spooler.submitted == []
+
+
+def test_cancel_while_sending_is_cancelled(setup):
+    """Cancelled while the upload fails: the outcome is Cancelled, not a refusal"""
+    from backends.backend_base import PrintError
+
+    holder = {}
+
+    class FailsAfterCancel:
+        def status(self, _target):
+            return "idle", [], []
+
+        def submit(self, *args):
+            holder["pm"]._cancel.set()
+            raise PrintError("Connection reset", "unreachable")
+
+    pm, printer, spooler = _two_methods(setup, FailsAfterCancel())
+    holder["pm"] = pm
+    box = run(pm, printer, pm.ticket(printer, {}), [1])
+    assert box["error"] == "Cancelled." and spooler.submitted == []

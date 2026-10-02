@@ -1,6 +1,7 @@
 """
 Segmented Control
-Pill-shaped group of mutually exclusive toggle buttons (e.g. Color | B&W).
+Linked group of mutually exclusive toggle buttons (e.g. Colour | Black & white),
+styled as lintheme's segmented choice (lt-seg). Arrow keys move between options.
 """
 
 import gi
@@ -14,8 +15,8 @@ class SegmentedControl(Gtk.Box):
 
     def __init__(self, items, active=None, on_changed=None, button_width=None):
         """items: [(key, label)]; button_width: same width for every button (uniform rows)"""
-        super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
-        self.get_style_context().add_class("segment")
+        super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        self.get_style_context().add_class("lt-seg")
         self.set_halign(Gtk.Align.START)
         self.buttons = {}
         self.on_changed = on_changed

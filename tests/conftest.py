@@ -23,6 +23,15 @@ def fixture_text(name):
 
 
 @pytest.fixture(autouse=True)
+def fresh_usb_link_reading():
+    """The kernel-log reading is cached module state: no test sees another's"""
+    from backends import usb_link
+
+    usb_link._state.update(readable=None, at=0.0, stats={})
+    yield
+
+
+@pytest.fixture(autouse=True)
 def private_user_data(tmp_path, monkeypatch):
     """Keep tests away from the real ~/.local/share/linprinter (recent list), settings and logs"""
     if "XDG_DATA_HOME" not in os.environ or not os.environ["XDG_DATA_HOME"].startswith(str(tmp_path)):

@@ -136,5 +136,65 @@
     "version": "0.2.8",
     "type": "chore",
     "summary": "Licence file is LICENSE.md (uniform CC BY-NC 4.0 rollout): package, About page, README and tests"
+  },
+  {
+    "time": "2026-10-02T17:47:48Z",
+    "version": "0.3.0",
+    "type": "feat",
+    "summary": "0.3.0 redesign: Print, Activity, Printer, Settings in Graphite Night (lintheme 1.2.3, WCAG 2.2 AA)"
+  },
+  {
+    "time": "2026-10-02T17:47:48Z",
+    "version": "0.3.0",
+    "type": "fix",
+    "summary": "History records cancelled and stopped jobs as such, never as Printed; job keeps its own document"
+  },
+  {
+    "time": "2026-10-02T17:47:48Z",
+    "version": "0.3.0",
+    "type": "fix",
+    "summary": "Troubleshooter calls a step fixed only when the printer answers; Printer page polls every 5 s"
+  },
+  {
+    "time": "2026-10-02T18:01:05Z",
+    "version": "0.3.0",
+    "type": "fix",
+    "summary": "Review round 2: honest link evidence when the kernel log is unreadable; test pages never leave the chip Busy"
+  },
+  {
+    "time": "2026-10-02T18:01:05Z",
+    "version": "0.3.0",
+    "type": "fix",
+    "summary": "Activity: empty state, cancelled shown neutral, aligned actions; preview stops growing the window"
+  },
+  {
+    "time": "2026-10-02T18:06:46Z",
+    "version": "0.3.0",
+    "type": "fix",
+    "summary": "Review round 3: journal never read on the GTK thread; paper out mid-print shows; honest USB evidence"
+  },
+  {
+    "time": "2026-10-02T18:11:37Z",
+    "version": "0.3.0",
+    "type": "fix",
+    "summary": "Review round 4: mid-print status never offers Reconnect; chip returns to Busy after paper out"
+  },
+  {
+    "time": "2026-10-02T18:15:07Z",
+    "version": "0.3.0",
+    "type": "fix",
+    "summary": "Job refused because paper ran out: said in words, never falls back to CUPS; no raw IPP status shown"
+  },
+  {
+    "time": "2026-10-02T18:18:48Z",
+    "version": "0.3.0",
+    "type": "fix",
+    "summary": "A link that dies under the upload, or a printer not taking jobs, never falls back to CUPS"
+  },
+  {
+    "time": "2026-10-02T18:21:51Z",
+    "version": "0.3.0",
+    "type": "fix",
+    "summary": "While printing only reasons that stop the job show Needs you; low ink no longer looks like a pause"
   }
 ]

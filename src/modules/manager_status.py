@@ -111,3 +111,32 @@ def ink_warnings(markers, threshold):
         if 0 <= level <= threshold:
             out.append(f"{m['name']} ink is {'empty' if level == 0 else f'low ({level} %)'}.")
     return out
+
+
+def chip_key(level, state=None, reasons=()):
+    """lintheme status key (ok / busy / attention / error) for a printer status.
+
+    Something the user fixes on the printer (paper, jam, cover, empty ink) is "Needs you",
+    even when the printer reports it as an -error: it is not a connection problem."""
+    if reasons and user_must_act(reasons):
+        return "attention"
+    if level == "error":
+        # the printer answered but reports a problem (stopped, an -error reason): it needs you;
+        # only no answer at all is a connection problem
+        return "attention" if state not in (None, "unknown") else "error"
+    if level == "warn":
+        return "attention"
+    return "busy" if state == "processing" else "ok"
+
+
+def needs_you_words(reasons):
+    """The short reason beside a disabled Print button"""
+    if any("media-empty" in r or "media-needed" in r for r in reasons):
+        return "Load paper first"
+    if any("jam" in r for r in reasons):
+        return "Clear the paper jam first"
+    if any("door-open" in r or "cover-open" in r for r in reasons):
+        return "Close the printer's cover first"
+    if any("marker-supply-empty" in r for r in reasons):
+        return "Replace the empty cartridge first"
+    return "Check the printer first"

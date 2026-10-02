@@ -18,6 +18,7 @@ gi.require_version("GdkPixbuf", "2.0")
 from gi.repository import Gdk, GdkPixbuf, GLib, Gtk  # noqa: E402
 
 from config.config_layout import Layout  # noqa: E402
+from lintheme.gtk3 import components as ui  # noqa: E402
 from utils.util_display import DisplayCache, page_key  # noqa: E402
 from utils.util_logging import get_logger  # noqa: E402
 
@@ -66,7 +67,7 @@ class PagePreview(Gtk.Box):
 
         # large view
         self.view = Gtk.ScrolledWindow()
-        self.view.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self.view.set_policy(Gtk.PolicyType.EXTERNAL, Gtk.PolicyType.EXTERNAL)  # fit; set_zoom adds bars
         self.view.set_min_content_height(Layout.dimensions.PREVIEW_MIN_HEIGHT)
         self.view.get_style_context().add_class("preview-frame")
         self.image = Gtk.Image()
@@ -83,18 +84,23 @@ class PagePreview(Gtk.Box):
         self.image_box.connect("button-release-event", self._pan_end)
         self.image_box.connect("motion-notify-event", self._pan_move)
         self.view.connect("scroll-event", self._on_scroll)
-        self.empty = Gtk.Label(label="No pages yet. Scan a document to see it here.")
-        self.empty.get_style_context().add_class("muted")
+        empty = ui.EmptyState(
+            "file-text", "No document yet", "Open a document (Ctrl+O) or drop a file here to see its pages."
+        )
+        empty.get_style_context().remove_class("lt-card")  # it sits in the preview pane, not on a card
+        empty.set_valign(Gtk.Align.CENTER)
+        self.empty = ui.text("", "lt-muted", wrap=True)  # why a page couldn't be shown
         self.stack = Gtk.Stack()
-        self.stack.add_named(self.empty, "empty")
+        self.stack.add_named(empty, "empty")
+        self.stack.add_named(self.empty, "error")
         self.stack.add_named(self.image_box, "image")
         self.view.add(self.stack)
         self.view.connect("size-allocate", self._on_resize)
         self.pack_start(self.view, True, True, 0)
 
-        # thumbnail strip: always-visible horizontal scroll bar, thumbnails from the left
+        # thumbnail strip: a horizontal scroll bar only when the thumbnails overflow, from the left
         self.strip_scroll = Gtk.ScrolledWindow()
-        self.strip_scroll.set_policy(Gtk.PolicyType.ALWAYS, Gtk.PolicyType.NEVER)
+        self.strip_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)  # only when it scrolls
         self.strip_scroll.set_overlay_scrolling(False)
         self.strip = Gtk.Grid(column_spacing=Layout.spacing.MEDIUM, row_spacing=Layout.spacing.SMALL)
         self.strip.set_halign(Gtk.Align.START)
@@ -146,6 +152,10 @@ class PagePreview(Gtk.Box):
     def set_zoom(self, zoom):
         """Zoom relative to fit-to-window (1.0 = fit)"""
         self.zoom = min(max(zoom, ZOOM_STEPS[0]), ZOOM_STEPS[-1])
+        # at fit or smaller the page fits: no scroll bars (they would shrink the view and loop)
+        # (EXTERNAL, not NEVER: NEVER makes the view ask for the whole image's size and grows the window)
+        bars = Gtk.PolicyType.AUTOMATIC if self.zoom > 1 + 1e-6 else Gtk.PolicyType.EXTERNAL
+        self.view.set_policy(bars, bars)
         self._render_large()
         if self.on_zoom:
             self.on_zoom(self.zoom)
@@ -238,6 +248,8 @@ class PagePreview(Gtk.Box):
             return False
         alloc = self._buttons[index].get_allocation()
         adj = self.strip_scroll.get_hadjustment()
+        if adj is None:  # the window closed before this idle call ran
+            return False
         if alloc.x < adj.get_value():
             adj.set_value(alloc.x)
         elif alloc.x + alloc.width > adj.get_value() + adj.get_page_size():
@@ -278,7 +290,7 @@ class PagePreview(Gtk.Box):
             self.stack.set_visible_child_name("image")
         except (OSError, GLib.Error, ValueError) as e:
             self.empty.set_text(f"Could not display page: {e}")
-            self.stack.set_visible_child_name("empty")
+            self.stack.set_visible_child_name("error")
         return False  # one-shot timeout
 
     # -- zoom and pan -------------------------------------------------------------

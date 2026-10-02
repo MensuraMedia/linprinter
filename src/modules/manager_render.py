@@ -18,6 +18,7 @@ import re
 import shutil
 import subprocess
 
+from lintheme.tokens import PAPER
 from PIL import Image, ImageDraw
 
 from utils.util_logging import get_logger
@@ -139,6 +140,7 @@ def select_pages(choice, count, text="", current=1):
     if choice == "current":
         return [min(max(current, 1), count)]
     if choice == "range":
+        text = re.sub(r"\s*(?:to|–|—)\s*", "-", text, flags=re.I)  # "3 to 5", "3–5" mean 3-5
         pages = []
         for part in re.split(r"[,\s]+", text.strip()):
             if not part:
@@ -238,11 +240,28 @@ def _shade_margins(path, margins_mm, dpi):
         return
     img = Image.open(path).convert("RGB")
     w, h = img.size
-    shade = Image.new("RGB", img.size, (205, 205, 205))
+    shade = Image.new("RGB", img.size, _rgb(PAPER["margin"]))
     mask = Image.new("L", img.size, 0)
     d = ImageDraw.Draw(mask)
     for box in ((0, 0, w, top), (0, h - bottom, w, h), (0, 0, left, h), (w - right, 0, w, h)):
         d.rectangle(box, fill=150)
     img = Image.composite(shade, img, mask)
-    ImageDraw.Draw(img).rectangle((left, top, w - right - 1, h - bottom - 1), outline=(120, 120, 120))
+    _dashed_rect(ImageDraw.Draw(img), (left, top, w - right - 1, h - bottom - 1), _rgb(PAPER["guide"]))
     img.save(path)
+
+
+def _rgb(hex_color):
+    """'#rrggbb' -> (r, g, b)"""
+    return tuple(int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+
+
+def _dashed_rect(draw, box, colour, dash=6, gap=4):
+    """The printable-edge guide: a dashed rectangle"""
+    x0, y0, x1, y1 = box
+    step = dash + gap
+    for x in range(x0, x1, step):
+        draw.line((x, y0, min(x + dash, x1), y0), fill=colour)
+        draw.line((x, y1, min(x + dash, x1), y1), fill=colour)
+    for y in range(y0, y1, step):
+        draw.line((x0, y, x0, min(y + dash, y1)), fill=colour)
+        draw.line((x1, y, x1, min(y + dash, y1)), fill=colour)

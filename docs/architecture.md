@@ -3,16 +3,22 @@
 ```
 src/
   main.py                 entry point: options, services, window (--test-printer, --list-printers, --page …)
-  config/                 layout, themes, print vocabulary (config_print: sizes, types, groups, USB-only flag)
-  ui/                     app window, sidebar (NAV_ITEMS), content area (PAGES), components (segmented, preview)
-  pages/                  one BasePage per screen: print, preview, queue, recent, printers, settings, about
+  lintheme/               vendored lin-dashboard-theme kit: Graphite Night tokens, CSS, status words, icons,
+                          GTK 3 components (chip, rail, cards, banners, gauges, action bar, steps…)
+  config/                 layout, print vocabulary (config_print: sizes, types, groups, USB-only flag)
+  ui/                     app window (header + status chip + menu, shortcuts), sidebar = rail (NAV_ITEMS),
+                          content area (PAGES), app_css (old class names on the tokens), components (segmented, preview)
+  pages/                  one BasePage per destination: print (options + live preview + action bar),
+                          activity (now printing + history), printer (health, upkeep, details, Troubleshooter),
+                          settings (printing, privacy and diagnostics, about)
   modules/
     app_context.py        shared services + tiny event hub (ctx.on / ctx.emit)
     manager_print.py      PrintManager: discovery, status, tickets, preview, print_async, jobs, setup & tests
     manager_render.py     Ghostscript/Pillow: normalise to PDF, page count/selection, PWG raster, PDF, previews
     manager_testpage.py   built-in quality and line test pages
-    manager_status.py     printer-state-reasons → plain words; ink warnings; "user must act"
-    manager_documents.py  Recent list
+    manager_status.py     printer-state-reasons → plain words; ink warnings; "user must act"; chip_key →
+                          Ready / Busy / Needs you / Can't reach
+    manager_documents.py  Activity history (recent.json: result and choices per print)
     manager_settings.py   settings.json (XDG), session overrides
   backends/
     ipp.py                IPP/1.1 binary codec + HTTP/1.1 client (RFC 8010/8011)

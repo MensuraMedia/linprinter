@@ -7,10 +7,9 @@ import json
 import os
 
 from config.config_print import DEFAULT_PDF_FOLDER, DEFAULT_QUALITY
-from config.config_themes import DEFAULT_THEME_ID
 
 DEFAULTS = {
-    "theme": DEFAULT_THEME_ID,
+    "theme": "graphite-night",  # the only theme (lintheme); kept so old settings files load
     "color_mode": "color",
     "quality": DEFAULT_QUALITY,
     "paper": "",  # size keyword; empty = the printer's default
@@ -22,6 +21,8 @@ DEFAULTS = {
     "pdf_folder": DEFAULT_PDF_FOLDER,  # Print to PDF saves here
     "low_ink_percent": 15,  # warn before printing when a cartridge is at or below this
     "thumbnail_rows": 1,
+    "more_options": False,  # Print page: More options open
+    "search_at_start": False,  # True: search for printers at start instead of reaching the last one
     "features": {},  # feature id -> enabled (missing = the feature's default)
     "feature_settings": {},  # feature id -> {option: value}
 }

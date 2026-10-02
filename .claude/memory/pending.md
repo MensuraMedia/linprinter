@@ -59,3 +59,14 @@ earlier). The 00:45 conclusion ("the printer's USB port") was wrong: the second 
 minutes at 23:18 made it look good. Lesson: a cable that works briefly is not cleared - measure it
 (`linktest`) and compare against a known-good device before blaming the printer or the host.
 HOST-USB.md's host theories need re-reading in this light.
+
+## Open after 0.3.0 (2026-10-02, branch feat/0.3.0-redesign)
+
+- Merge to main only when the user is satisfied with the redesign (their rule).
+- Offline pool: run `../bin/make-offline-bundle linprinter && ../bin/test-offline linprinter` from the
+  linux-peripherals checkout (new dependency `fonts-ubuntu`).
+- lin-dashboard-theme: licence, git remote and first commit are the user's decision.
+- The universal permissions file (blanket allow, `dontAsk`) was not deployed: the user's decision.
+- Try the redesign on the real TR150 (user's go-ahead needed to print).
+- Status asks for every attribute (~119 KB with media-col-database) each poll; a small request (printer-state, -reasons, marker-*, media-ready) would spare the USB link (code review, 2026-10-02).
+- After a failed upload the status re-read is a full Get-Printer-Attributes (up to ~10 s on a dead link); use the small request from the item above.

@@ -22,8 +22,8 @@ def recent_path():
 def _saved_ts(entry):
     """When an entry was printed (epoch seconds; 0 if unknown)"""
     try:
-        return datetime.fromisoformat(entry.get("printed_at", "")).timestamp()
-    except ValueError:
+        return datetime.fromisoformat(entry.get("printed_at") or "").timestamp()
+    except (ValueError, TypeError):
         return 0
 
 
@@ -39,14 +39,19 @@ def recent_entries(existing_only=True):
     return [e for e in entries if os.path.exists(e["path"])] if existing_only else entries
 
 
-def add_recent(path, printer, pages, summary):
-    """Remember a printed document (a re-printed file moves to the top)"""
+def add_recent(path, printer, pages, summary, result="printed", choices=None):
+    """Remember a printed document (a re-printed file moves to the top).
+
+    result: "printed", or a short reason when it didn't print (Activity shows it);
+    choices: the options used (Activity → Print again restores them)"""
     entry = {
         "path": os.path.abspath(path),
         "printed_at": datetime.now().isoformat(timespec="seconds"),
         "printer": printer,
         "pages": pages,
         "summary": summary,
+        "result": result,
+        "choices": choices or {},
     }
     entries = [entry] + [e for e in recent_entries(existing_only=False) if e["path"] != entry["path"]]
     tmp = recent_path() + ".tmp"

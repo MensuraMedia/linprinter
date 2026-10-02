@@ -22,13 +22,11 @@ GLib.set_application_name("LinPrinter")
 Gdk.set_program_class("linprinter")
 
 from config.config_print import NETWORK_PRINTING  # noqa: E402
-from config.config_themes import get_theme  # noqa: E402
 from features import FeatureRegistry  # noqa: E402
 from modules.app_context import AppContext  # noqa: E402
 from modules.manager_navigation import NavigationManager  # noqa: E402
 from modules.manager_print import PrintManager  # noqa: E402
 from modules.manager_settings import SettingsManager  # noqa: E402
-from modules.manager_theme_applicator import ThemeApplicator  # noqa: E402
 from ui.app_window import AppWindow  # noqa: E402
 from utils.util_logging import get_logger, install_excepthook, setup_logging, system_info  # noqa: E402
 from utils.util_paths import read_version  # noqa: E402
@@ -48,7 +46,7 @@ def parse_args(argv):
     p.add_argument(
         "--page",
         default="print",
-        help="page to open: print, preview, queue, recent, printers, settings, about",
+        help="page to open: print, activity, printer, settings (old names such as queue or printers still work)",
     )
     p.add_argument(
         "--quit-after", type=int, default=0, metavar="SECONDS", help="close automatically (for UI tests)"
@@ -69,6 +67,16 @@ def parse_args(argv):
         help="document to open (PDF, image or text) - used by 'Open with LinPrinter' in the file manager",
     )
     return p.parse_args(argv)
+
+
+# 0.2.x pages and where they live now (0.3.0 redesign: four destinations)
+PAGE_ALIASES = {
+    "preview": "print",
+    "queue": "activity",
+    "recent": "activity",
+    "printers": "printer",
+    "about": "settings",
+}
 
 
 def main(argv=None):
@@ -121,24 +129,20 @@ def main(argv=None):
             test.stop()
         return 0
 
-    theme = ThemeApplicator()
-    theme.apply_theme(get_theme(settings.get("theme")))
-    ctx = AppContext(settings, printing, NavigationManager(), theme)
+    ctx = AppContext(settings, printing, NavigationManager(), None)  # one theme: lintheme Graphite Night
     ctx.features = FeatureRegistry(settings)  # optional modules (src/features/feature_*.py)
     ctx.log_path = log_path
     log.info("network printing: %s", "on" if NETWORK_PRINTING else "off (USB only, no network discovery)")
     log.info(
-        "settings: theme=%s color=%s quality=%s paper=%s type=%s scaling=%s pdf_folder=%s",
-        *(
-            settings.get(k)
-            for k in ("theme", "color_mode", "quality", "paper", "paper_type", "scaling", "pdf_folder")
-        ),
+        "settings: color=%s quality=%s paper=%s type=%s scaling=%s pdf_folder=%s",
+        *(settings.get(k) for k in ("color_mode", "quality", "paper", "paper_type", "scaling", "pdf_folder")),
     )
 
     window = AppWindow(ctx)
     window.connect("destroy", Gtk.main_quit)
     window.show_all()
-    ctx.nav.navigate_to("print" if args.files else args.page)
+    page = PAGE_ALIASES.get(args.page, args.page)  # 0.2.x page names still work
+    ctx.nav.navigate_to("print" if args.files else page)
     if args.files:
         # "Open with LinPrinter": open the file once the window is up (printers load in parallel)
         path = os.path.abspath(args.files[0])
