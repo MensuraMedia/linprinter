@@ -9,7 +9,7 @@ All notable changes to LinPrinter. Semantic versioning; newest first.
   every print and Print again with its settings), **Printer** (health first: Ready · Busy · Needs you ·
   Can't reach, then ink, connection, upkeep, the printer's own defaults and details) and **Settings**
   (Printing, Privacy and diagnostics, About). A status chip in the header on every page.
-- **Built on lin-dashboard-theme** (`src/lintheme`, vendored, 1.2.3): one set of tokens for colour,
+- **Built on LinAppTemplate** (formerly lin-dashboard-theme; github.com/MensuraMedia/linapptemplate) (`src/lintheme`, vendored, 1.2.3): one set of tokens for colour,
   type, space and size; WCAG 2.2 AA contrast tested for every pair; targets of 32 px or more; a
   visible focus ring; every icon-only control named. Ubuntu font (`fonts-ubuntu`, a new dependency).
 - **Print says why it can't print**, beside the button: "Open a document first", "Load paper first",

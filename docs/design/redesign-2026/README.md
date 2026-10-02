@@ -5,7 +5,7 @@ The approved design that 0.3.0 implements, and what the design adversary checks 
 | File | What it is |
 |---|---|
 | `mockup-App.dc.html` | The clickable mockup's source: every screen and state (`screen` = print-first, print-ready, print-more, print-needs, print-printing, print-printed, print-cant, activity, activity-empty, printer, printer-link, trouble-cable, trouble-result, settings-…). Open it in the claude.ai design canvas, or read its markup. |
-| `reference/*.png` | The same screens in **Graphite Night**, rendered from real GTK 3 widgets by lin-dashboard-theme's demo app. |
+| `reference/*.png` | The same screens in **Graphite Night**, rendered from real GTK 3 widgets by LinAppTemplate's demo app. |
 
 ## What the design decided
 
@@ -19,7 +19,7 @@ The approved design that 0.3.0 implements, and what the design adversary checks 
   their scope and ask first; only destructive actions are confirmed.
 - **WCAG 2.2 AA**: contrast tested for every colour pair, targets ≥ 32 px, focus ring, names on
   every control, status never by colour alone.
-- **One theme: Graphite Night** (user decision, 2026-10-02), from lin-dashboard-theme (`src/lintheme/`).
+- **One theme: Graphite Night** (user decision, 2026-10-02), from LinAppTemplate (github.com/MensuraMedia/linapptemplate, vendored as `src/lintheme/`).
 
 ## Intentional departures from the mockup source
 

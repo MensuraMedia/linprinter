@@ -84,8 +84,9 @@ status vocabulary (Ready · Busy · Needs you · Can't reach). Only Graphite Nig
 other themes are needed, so there is no theme picker. GTK 3 stays (the apps are GTK 3; GTK 4.14 lacks
 CSS variables and libadwaita 1.5 lacks ToggleGroup, so a port gains nothing now).
 
-## 2026-10-02 — lin-dashboard-theme vendored, not a dependency
-The kit lives in `~/projects/lin-dashboard-theme` (no remote yet) and is copied into `src/lintheme`.
+## 2026-10-02 — The theme kit is vendored, not a dependency
+The kit lives in `~/projects/linapptemplate` (LinAppTemplate, github.com/MensuraMedia/linapptemplate;
+named lin-dashboard-theme until 2026-10-02) and is copied into `src/lintheme`.
 Why: distro packages only, offline install, and the kit has no package. Change the kit first, then
 copy it; record the kit version in the change manifest.
 

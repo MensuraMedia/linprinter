@@ -358,7 +358,7 @@ class SettingsPage(BasePage):
             ui.key_values(
                 [
                     ("Made by", "MensuraMedia · sibling of LinScanner · part of linux-peripherals"),
-                    ("Look", "lin-dashboard-theme (Graphite Night)"),
+                    ("Look", "LinAppTemplate (Graphite Night)"),
                     ("Printing", "CUPS, cups-filters and ipp-usb (OpenPrinting), IPP Everywhere (PWG)"),
                     ("Rendering", "Ghostscript (Artifex), Pillow"),
                     ("Icons", "Phosphor Icons by Helena Zhang and Tobias Fried (MIT)"),

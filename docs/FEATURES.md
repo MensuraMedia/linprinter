@@ -13,7 +13,7 @@
 | Printer | Hero status; Ink and paper; Connection (port, route, kernel-log link errors, Test connection, Reconnect…); Look after the printer (test pages, Look first, printer's own page); own defaults; Details; stray-queue banner with the command | pages/page_printer.py |
 | Troubleshooter | Six steps, cheapest first (cable first), live evidence from the kernel log and the link test | pages/page_printer.py |
 | Settings | Printing (PDF folder, low ink %, start behaviour, features), Privacy and diagnostics, About | pages/page_settings.py |
-| Theme | Graphite Night only (lin-dashboard-theme, vendored); WCAG 2.2 AA contrast for every pair | src/lintheme/ |
+| Theme | Graphite Night only (LinAppTemplate, vendored); WCAG 2.2 AA contrast for every pair | src/lintheme/ |
 | Print to PDF | ~/Documents/prints (Settings), unique names | backend_pdf |
 | Feature: Ink alerts | Warns before printing at or below the low-ink level (on) | features/feature_ink_alerts.py |
 | Feature: Print profiles | Built-in and saved presets on the Print page (off) | features/feature_profiles.py |

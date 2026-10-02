@@ -94,7 +94,7 @@ simulates paper-out and similar states. CUPS' `ipptool get-printer-attributes.te
   (`linprinter --version`, `--list-printers`), and both installer modes, including re-runs and uninstall.
 
 ## User interface (0.3.0)
-- GTK 3 with lin-dashboard-theme (`src/lintheme`, vendored): `tokens.py` is the only source of
+- GTK 3 with LinAppTemplate (`src/lintheme`, vendored): `tokens.py` is the only source of
   colours, type, space and sizes; `css.build_css(3)` turns them into one stylesheet installed at
   application priority; `ui/app_css.py` maps LinPrinter's own class names onto the same tokens.
 - Status vocabulary: `manager_status.chip_key(level, state, reasons)` → ok / busy / attention /

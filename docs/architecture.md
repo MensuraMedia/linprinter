@@ -3,7 +3,7 @@
 ```
 src/
   main.py                 entry point: options, services, window (--test-printer, --list-printers, --page …)
-  lintheme/               vendored lin-dashboard-theme kit (1.2.7): Graphite Night tokens, CSS, status words,
+  lintheme/               vendored LinAppTemplate kit (1.2.7): Graphite Night tokens, CSS, status words,
                           icons, GTK 3 components (chip, rail, cards, banners, gauges, action bar, steps,
                           no_wheel dropdowns…)
   config/                 layout, print vocabulary (config_print: sizes, types, groups, USB-only flag)

@@ -17,7 +17,7 @@ never edit files; you report findings with evidence and a severity.
    `screen` states are print-first, print-ready, print-more, print-needs, print-printing,
    print-printed, print-cant, activity, activity-empty, printer, printer-link, trouble-cable,
    trouble-result, settings-appearance/printing/privacy/about).
-2. **Theme**: Graphite Night only, from `src/lintheme/tokens.py` (vendored from lin-dashboard-theme).
+2. **Theme**: Graphite Night only, from `src/lintheme/tokens.py` (vendored from LinAppTemplate, github.com/MensuraMedia/linapptemplate).
    Rendered references in Graphite Night: `docs/design/redesign-2026/reference/*.png`.
 3. **Design reference**: the LinPrinter GUI Guide and Design Reference (sections summarised in
    `docs/design/redesign-2026/README.md`): 4 destinations, status vocabulary, message pattern,

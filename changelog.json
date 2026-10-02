@@ -220,5 +220,11 @@
     "version": "0.3.0",
     "type": "docs",
     "summary": "README tour with every 0.3.0 screenshot, Custom pages and paper-out tips; TECHNICAL, architecture"
+  },
+  {
+    "time": "2026-10-02T22:43:11Z",
+    "version": "0.3.0",
+    "type": "docs",
+    "summary": "Theme kit renamed LinAppTemplate (github.com/MensuraMedia/linapptemplate); About credit and docs follow"
   }
 ]

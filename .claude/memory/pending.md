@@ -65,7 +65,7 @@ HOST-USB.md's host theories need re-reading in this light.
 - Merge to main only when the user is satisfied with the redesign (their rule).
 - Offline pool: run `../bin/make-offline-bundle linprinter && ../bin/test-offline linprinter` from the
   linux-peripherals checkout (new dependency `fonts-ubuntu`).
-- lin-dashboard-theme: licence, git remote and first commit are the user's decision.
+- LinAppTemplate (was lin-dashboard-theme): pushed to github.com/MensuraMedia/linapptemplate 2026-10-02; its licence is still the user's decision.
 - The universal permissions file (blanket allow, `dontAsk`) was not deployed: the user's decision.
 - Try the redesign on the real TR150 (user's go-ahead needed to print).
 - Status asks for every attribute (~119 KB with media-col-database) each poll; a small request (printer-state, -reasons, marker-*, media-ready) would spare the USB link (code review, 2026-10-02).
