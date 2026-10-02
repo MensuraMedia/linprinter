@@ -29,6 +29,7 @@ tools/
   walkthrough.py          scripted UI run in a sandbox home with the test printer → docs/screenshots/
   build-deb.sh            installer package → dist/linprinter_<version>_all.deb + SHA256SUMS
   gen_api_docs.py         docs/api-reference.md
+  usb_linktest.py         read-only USB link test (failed descriptor reads) — docs/USB-TROUBLESHOOTING.md
 dist/                     the installer package (committed) and its checksum
 install.sh                installer script: per user (default), --package (system-wide), --uninstall
 app.json                  dependency list (distro packages) for install.sh, the package and the offline pool

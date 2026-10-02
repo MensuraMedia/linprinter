@@ -197,7 +197,7 @@ Constants: `FIXTURE`
 
 USB Link How the USB link to a printer has behaved lately, read from the kernel log: error -71 (EPROTO, a transfer that failed electrically), failed enumeration and disconnects, per port. No driver, setting or service cures these - they come from the cable, the socket, power or the device's own USB port - so LinPrinter says that in plain words instead of searching for a printer that keeps vanishing.  Reads `journalctl -k`, which needs the adm or systemd-journal group; without it the answer is simply "nothing known". Only port numbers and USB ids are kept, never serial numbers.
 
-Constants: `WINDOW_MINUTES`, `ERRORS_FAILING`, `DISCONNECTS_FAILING`, `FAILURE`, `PORT`, `IDS`
+Constants: `WINDOW_MINUTES`, `ERRORS_FAILING`, `DISCONNECTS_FAILING`, `FAILURE`, `PORT`, `IDS`, `CABLE_ADVICE`
 
 | Symbol | Purpose |
 |---|---|
@@ -206,7 +206,10 @@ Constants: `WINDOW_MINUTES`, `ERRORS_FAILING`, `DISCONNECTS_FAILING`, `FAILURE`,
 | `recent(minutes=WINDOW_MINUTES)` | parse() of the recent kernel log |
 | `failing(port, stats)` | True if the link on this port has kept failing |
 | `failing_ports(stats, usb_id='', port='')` | Failing ports that held this device (by USB id) or are its known port |
-| `advice(port, stats, minutes=WINDOW_MINUTES)` | What to tell the user about a failing link, in plain words |
+| `unidentified_failing_ports(stats)` | Failing ports where no device ever got far enough to say what it is. |
+| `_counts(port, stats)` | 'N connection errors and M disconnects' |
+| `advice(port, stats, minutes=WINDOW_MINUTES)` | What to tell the user about a failing link to their printer, in plain words |
+| `advice_unidentified(port, stats, minutes=WINDOW_MINUTES)` | The same for a device that never identified itself |
 
 ### `src/backends/usb_probe.py`
 

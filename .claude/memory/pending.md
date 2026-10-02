@@ -29,11 +29,33 @@
 
 ## Open after 0.2.8 (2026-10-01)
 
-- **TR150 USB link still failing on this host** (port 3-3, new cable: clean for 2 min, then failed to
+- ~~TR150 USB link still failing on this host~~ RESOLVED 2026-10-02 (bad cables, see below). Was: (port 3-3, new cable: clean for 2 min, then failed to
   enumerate after a power cycle). LPM off (`usbcore.quirks=04a9:18a4:k`) changed nothing - it is set
   until reboot only. Next: the rear USB 2.0 socket; the printer on another computer (only clean test
   of the printer's own USB port). `~/projects/canon-printer/tr150-usb.sh` has the steps.
-- **The user's document has not printed** (job 17 cut off and cancelled).
+- ~~The user's document has not printed~~ printed 2026-10-02 00:54 (P1, 62 s).
 - Correct `linux-peripherals/docs/HOST-USB.md` §6/§7: `init-reset` already defaults to `none` in
   ipp-usb 0.9.24, so test #1's reset rationale is moot; only `usb-max-interfaces = 1` remains.
 - Misdirected-queue note not seen live yet (queue deleted before the fix).
+
+## Link measured (2026-10-02 00:45) - SUPERSEDED at 00:52: it was the cables
+
+`canon-printer/ipp-usb-direct.py linktest` (usbfs control requests, 200 each, no printing):
+TR150 on 3-1: 27/200 descriptor reads and 23/200 SET_INTERFACE failed with -71 (13.5 % / 11.5 %,
+after the xHCI's own 3 retries, so roughly half of all transactions are corrupted). The USB 2.0 hub
+on 3-5, same controller, same 480 Mbit/s, one minute later: 0/200. Two cables and sockets 3-1, 3-3,
+3-4 (and 3-5 in September) all fail. Conclusion: the TR150's USB port / interface; confirm on another
+computer. No software path (ipp-usb, CUPS, cnijfilter2, direct usbfs) can carry a 62 MB job over it.
+Also found: the legacy 7/1/2 channel speaks only `CMD:IVEC` (Canon's private language); ipp-usb
+0.9.24 matches quirk sections by model name (`[Canon TR150 series]`), not `[04a9:18a4]`; with a
+failing device it loops `libusb_set_configuration: Entity not found` every 2.5 s.
+Left on the machine: `/etc/ipp-usb/quirks/canon-tr150.conf` (blacklist), ipp-usb stopped,
+`usbcore.quirks=04a9:18a4:k` until reboot.
+
+## RESOLVED (2026-10-02 00:52): both earlier cables were bad
+The user tried a third cable. Same port 3-1, same printer: enumerated first try, the kernel configured
+it itself, no -71, and `linktest` gave **0/200 and 0/200** (was 27/200 and 23/200 ten minutes
+earlier). The 00:45 conclusion ("the printer's USB port") was wrong: the second cable's 2 clean
+minutes at 23:18 made it look good. Lesson: a cable that works briefly is not cleared - measure it
+(`linktest`) and compare against a known-good device before blaming the printer or the host.
+HOST-USB.md's host theories need re-reading in this light.

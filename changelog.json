@@ -112,5 +112,23 @@
     "version": "0.2.8",
     "type": "fix",
     "summary": "CUPS queues judged by device URI: a serial-port queue with the printer's name is flagged"
+  },
+  {
+    "time": "2026-10-02T04:59:09Z",
+    "version": "0.2.8",
+    "type": "fix",
+    "summary": "USB advice leads with another cable; a port failing before its device identifies itself is reported"
+  },
+  {
+    "time": "2026-10-02T04:59:09Z",
+    "version": "0.2.8",
+    "type": "feat",
+    "summary": "tools/usb_linktest.py: read-only USB link test, optionally against a known-good device"
+  },
+  {
+    "time": "2026-10-02T04:59:09Z",
+    "version": "0.2.8",
+    "type": "docs",
+    "summary": "docs/USB-TROUBLESHOOTING.md: check order, message meanings, queues, ipp-usb, the TR150 record"
   }
 ]

@@ -63,3 +63,10 @@ Asked for a "universal Canon driver". Declined in favour of driverless IPP (alre
 Canons with IPP-over-USB) plus clearer diagnosis: the failures were electrical (-71) and a hung
 endpoint, which any driver - Canon's own included - would hit identically. Canons without 7/1/4 need
 cnijfilter2, which is not a distro package; the linux-peripherals installer explains that instead.
+
+## 2026-10-02 — Cable first, and measure
+Every TR150 failure from 2026-09-23 to 2026-10-02 was a faulty cable (two of them). Earlier sessions
+blamed the printer's USB port and the host's controller; both were wrong, because a cable that worked
+for minutes was treated as cleared. LinPrinter's USB advice now leads with another cable, and
+`tools/usb_linktest.py` gives a number (failed control reads, against a known-good device) before
+anything else is blamed.

@@ -76,7 +76,8 @@ def unusable_hint(dev):
             return (
                 "This printer is connected and speaks driverless IPP, but the ipp-usb service "
                 "isn't answering for it. Press Reconnect to re-attach it (it can also be woken by "
-                "unplugging the printer and plugging it back in)."
+                "unplugging the printer and plugging it back in). If it keeps happening, try another "
+                "USB cable."
             )
         return (
             "This printer is connected, but nothing answers for it yet. It can print "
@@ -212,14 +213,14 @@ class PrintManager:
         if not usb.get("id") or any(p.usb and p.usb.usb_id == usb["id"] for p in printers):
             return
         ports = usb_link.failing_ports(stats, usb["id"], usb.get("port", ""))
+        unknown = usb_link.unidentified_failing_ports(stats)
         if ports:
-            printers.append(
-                PrinterDevice(
-                    key=f"usb:{usb['id']}",
-                    name=info.get("name") or usb["id"],
-                    hint=usb_link.advice(ports[-1], stats),
-                )
-            )
+            hint = usb_link.advice(ports[-1], stats)
+        elif unknown:
+            hint = usb_link.advice_unidentified(unknown[-1], stats)
+        else:
+            return
+        printers.append(PrinterDevice(key=f"usb:{usb['id']}", name=info.get("name") or usb["id"], hint=hint))
 
     @staticmethod
     def _misdirected_notes(printers, misdirected):

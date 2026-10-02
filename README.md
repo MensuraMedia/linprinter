@@ -287,10 +287,13 @@ maintenance**, then print the **line page** to check.
 
 ## 8. Troubleshooting
 
+USB problems: [docs/USB-TROUBLESHOOTING.md](docs/USB-TROUBLESHOOTING.md) (cable first, how to
+measure the link, what each message means).
+
 | You see | Try |
 |---|---|
 | Red power mark, "Printer may be off. Check power settings." | Switch the printer on, check the USB cable, press **Find** (LinPrinter also keeps looking by itself). `systemctl status ipp-usb` should show it running while the printer is plugged in. |
-| The connection keeps dropping; the printer has to be found again and again | LinPrinter says so itself: "The USB link to this printer keeps failing (… on port 3-3 …)" on the Printers page and in `--list-printers`, read from the kernel log. Almost always the **USB port or cable** - no driver or setting fixes it. Check with `journalctl -k -b \| grep "usb .*error -71"`: if one port keeps appearing, move the printer to another port directly on the computer, and try another cable. `/var/log/ipp-usb/*.log` showing `libusb_bulk_transfer: Input/Output Error` is the same fault. |
+| The connection keeps dropping; the printer has to be found again and again | **Try another USB cable first**, straight into the computer - even one that worked for a while (two faulty cables caused a week of TR150 failures). LinPrinter says so itself: "The USB link to this printer keeps failing (… on port 3-3 …)" on the Printers page and in `--list-printers`, read from the kernel log. Measure the link with `sudo python3 tools/usb_linktest.py 04a9:18a4 --compare <a known-good VID:PID>`: any failures mean a bad link. No driver or setting fixes it. Full guide: [docs/USB-TROUBLESHOOTING.md](docs/USB-TROUBLESHOOTING.md). |
 | "The printer's USB connection isn't carrying data (ipp-usb answered 503…)" | The printer is stuck, usually holding a job the link cut off. Turn it off and on (or press **Reconnect**). LinPrinter won't send the job to a CUPS queue instead: that queue goes through the same USB link. |
 | "The system print queue … sends jobs to serial:/dev/ttyS0, not to this printer" | A queue with the printer's name points somewhere else, so Print in other programs fails. Remove it with the `sudo lpadmin -x …` command shown; CUPS makes a correct one when the printer is connected. |
 | "Load paper in the rear tray." | Load paper and print again. LinPrinter won't send the job another way while the printer needs you. |
@@ -339,7 +342,7 @@ no account, no telemetry and no update check.
 ```bash
 python3 -m compileall -q src                                                     # build
 python3 -m black --check src tests tools && python3 -m pyflakes src tests tools  # lint
-python3 -m pytest -q                                   # 35 tests (uses the built-in test printer)
+python3 -m pytest -q                                   # 81 tests (uses the built-in test printer)
 python3 tools/walkthrough.py                           # scripted UI run → docs/screenshots/
 bash tools/build-deb.sh                                # installer package → dist/ + SHA256SUMS
 python3 tools/gen_api_docs.py                          # docs/api-reference.md
@@ -355,6 +358,7 @@ python3 tools/gen_api_docs.py                          # docs/api-reference.md
 - Docs:
   - [architecture](docs/architecture.md)
   - [technical reference](docs/TECHNICAL.md)
+  - [USB troubleshooting](docs/USB-TROUBLESHOOTING.md)
   - [features](docs/FEATURES.md)
   - [design notes](docs/design/)
   - [API](docs/api-reference.md)

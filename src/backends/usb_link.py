@@ -82,14 +82,43 @@ def failing_ports(stats, usb_id="", port=""):
     ]
 
 
-def advice(port, stats, minutes=WINDOW_MINUTES):
-    """What to tell the user about a failing link, in plain words"""
+def unidentified_failing_ports(stats):
+    """Failing ports where no device ever got far enough to say what it is.
+
+    A link bad enough to fail enumeration never delivers the device descriptor, so the
+    USB id can't tie it to a printer (2026-10-01: the TR150 on ports 3-3 and 3-4)."""
+    return [p for p, s in sorted(stats.items()) if failing(p, stats) and not s["ids"]]
+
+
+# Cable first: on 2026-10-02 two bad cables caused every TR150 failure seen over a week, while
+# the printer, the host and the software were blamed in turn. A cable that works for a minute
+# is not cleared.
+CABLE_ADVICE = (
+    "Try another USB cable first - a faulty cable was the cause before, even one that worked for "
+    "a while - plugged straight into the computer, then turn the printer off and on. No driver or "
+    "setting fixes this."
+)
+
+
+def _counts(port, stats):
+    """'N connection errors and M disconnects'"""
     s = stats.get(port) or {"errors": 0, "disconnects": 0}
     errors = f"{s['errors']} connection error" + ("" if s["errors"] == 1 else "s")
     drops = f"{s['disconnects']} disconnect" + ("" if s["disconnects"] == 1 else "s")
+    return f"{errors} and {drops}"
+
+
+def advice(port, stats, minutes=WINDOW_MINUTES):
+    """What to tell the user about a failing link to their printer, in plain words"""
     return (
-        f"The USB link to this printer keeps failing ({errors} and {drops} on port {port} "
-        f"in the last {minutes} minutes). That is the "
-        "cable, the socket or the printer's USB port, not a driver: use a short USB 2.0 cable "
-        "straight into the computer, then turn the printer off and on."
+        f"The USB link to this printer keeps failing ({_counts(port, stats)} on port {port} "
+        f"in the last {minutes} minutes). {CABLE_ADVICE}"
+    )
+
+
+def advice_unidentified(port, stats, minutes=WINDOW_MINUTES):
+    """The same for a device that never identified itself"""
+    return (
+        f"A USB device on port {port} keeps failing to connect ({_counts(port, stats)} in the last "
+        f"{minutes} minutes), so it can't even say what it is. If that is this printer: {CABLE_ADVICE}"
     )

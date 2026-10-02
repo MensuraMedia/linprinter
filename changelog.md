@@ -21,7 +21,17 @@ All notable changes to LinPrinter. Semantic versioning; newest first.
   reaches the permanent queue, which rejected every job. Permanent queues now decide their name; a
   cups-browsed `implicitclass://` queue resolves to the printer it stands for; a queue on `serial:`,
   `parallel:` or `file:` is reported on the matching printer with the `sudo lpadmin -x` command.
-- 79 tests (USB link parsing, queue sorting including the 2026-10-01 case, HTTP 503, no fallback).
+- **Cable first.** The TR150's failures turned out to be two faulty USB cables (a third cable: 0 failed
+  requests where the others lost 13.5 %, and the document printed at once). Every USB message now leads
+  with "try another USB cable", and a port that fails before its device can even identify itself is
+  reported too ("A USB device on port 3-4 keeps failing to connect …") instead of an empty list.
+- **`tools/usb_linktest.py`**: a read-only link test - 200 small descriptor reads through usbfs, failures
+  counted, optionally compared with a known-good device on the same controller.
+- **docs/USB-TROUBLESHOOTING.md**: the order to check things in, what each LinPrinter, kernel and ipp-usb
+  message means, print-queue pitfalls, ipp-usb quirk matching (by model name, not USB id), and the
+  2026-09-21 to 2026-10-02 TR150 record.
+- 81 tests (USB link parsing, queue sorting including the 2026-10-01 case, HTTP 503, no fallback,
+  unidentified failing ports, the link-test tool).
 
 ## 0.2.7 — 2026-09-24
 

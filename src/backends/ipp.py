@@ -354,7 +354,7 @@ class IppClient:
             raise IppError(
                 "The printer's USB connection isn't carrying data (ipp-usb answered 503, Service "
                 "Unavailable). Turn the printer off and on, or press Reconnect; if it keeps "
-                "happening, try a short USB 2.0 cable straight into the computer.",
+                "happening, try another USB cable, straight into the computer.",
                 code="link",
             )
         if response.status != 200:

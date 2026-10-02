@@ -61,6 +61,12 @@ marker-supply-empty and input-tray-missing.
   `implicitclass://NAME/` (cups-browsed) resolves to the printer announced as NAME. A queue on
   `serial:`, `parallel:` or `file:` is *misdirected*; a matching printer gets a note with the
   `lpadmin -x` command.
+- A port that fails before its device delivers a descriptor has no USB id; when the remembered
+  printer is missing, such a port is reported as "a USB device on port … keeps failing to connect".
+- All USB advice leads with **another cable** (`usb_link.CABLE_ADVICE`): on 2026-10-02 two faulty
+  cables were the cause of every TR150 failure. `tools/usb_linktest.py` measures a link: 200
+  GET_DESCRIPTOR(device) control reads through usbfs (`USBDEVFS_CONTROL`), read-only, optionally
+  against a known-good device on the same controller. See docs/USB-TROUBLESHOOTING.md.
 
 ## Test printer
 `TestPrinter` is a ThreadingHTTPServer on 127.0.0.1:0 (HTTP/1.1). It serves

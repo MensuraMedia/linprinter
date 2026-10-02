@@ -1,4 +1,6 @@
-"""USB link health from the kernel log, and how discovery reports it"""
+"""USB link health from the kernel log, how discovery reports it, and tools/usb_linktest.py"""
+
+import os
 
 from backends import usb_link
 from backends.backend_base import PrinterDevice
@@ -37,7 +39,7 @@ def test_failing_needs_more_than_one_unplug():
     assert usb_link.failing_ports(stats, "04a9:18a4") == ["3-3"]
     assert usb_link.failing_ports(stats, "", "3-3") == ["3-3"]
     assert usb_link.failing_ports(stats, "1234:5678") == []
-    assert "short USB 2.0 cable" in usb_link.advice("3-3", stats)
+    assert "another USB cable" in usb_link.advice("3-3", stats)
 
 
 def test_kernel_log_unreadable_means_nothing_known(monkeypatch):
@@ -81,3 +83,36 @@ def test_misdirected_queue_note(tmp_path):
     assert "serial:/dev/ttyS0" in printers[0].notes[0]
     assert "baud" not in printers[0].notes[0]
     assert "lpadmin -x Canon_TR150_series_USB" in printers[0].notes[0]
+
+
+def test_unidentified_failing_port_is_reported(tmp_path):
+    """2026-10-01: the printer failed before it could even give its USB id"""
+    log = "usb usb3-port4: Cannot enable. Maybe the USB cable is bad?\nusb 3-4: device descriptor read/64, error -71\n"
+    stats = usb_link.parse(log)
+    assert usb_link.unidentified_failing_ports(stats) == ["3-4"]
+    pm = _manager(
+        tmp_path, {"key": "usb:x", "name": "Canon TR150 series", "usb": {"id": "04a9:18a4", "port": "3-1"}}
+    )
+    printers = []
+    pm._link_notes(printers, stats)
+    assert "port 3-4" in printers[0].hint and "another USB cable" in printers[0].hint
+
+
+def test_linktest_tool(tmp_path):
+    import importlib.util
+    import struct
+
+    path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools", "usb_linktest.py"
+    )
+    spec = importlib.util.spec_from_file_location("usb_linktest", path)
+    lt = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(lt)
+    assert len(lt.control_request(18, 0)) == 24 == struct.calcsize("=BBHHHI4xQ")
+    assert lt.verdict(200, 0).startswith("healthy")
+    assert lt.verdict(173, 27).startswith("FAILING") and "cable" in lt.verdict(173, 27)
+    dev = tmp_path / "3-1"
+    dev.mkdir()
+    for name, value in {"idVendor": "04a9", "idProduct": "18a4", "busnum": "3", "devnum": "104"}.items():
+        (dev / name).write_text(value + "\n")
+    assert lt.find("04A9:18A4", str(tmp_path)) == [("/dev/bus/usb/003/104", "3-1")]
