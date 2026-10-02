@@ -130,5 +130,11 @@
     "version": "0.2.8",
     "type": "docs",
     "summary": "docs/USB-TROUBLESHOOTING.md: check order, message meanings, queues, ipp-usb, the TR150 record"
+  },
+  {
+    "time": "2026-10-02T14:14:02Z",
+    "version": "0.2.8",
+    "type": "chore",
+    "summary": "Licence file is LICENSE.md (uniform CC BY-NC 4.0 rollout): package, About page, README and tests"
   }
 ]

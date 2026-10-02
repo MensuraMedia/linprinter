@@ -70,3 +70,10 @@ blamed the printer's USB port and the host's controller; both were wrong, becaus
 for minutes was treated as cleared. LinPrinter's USB advice now leads with another cable, and
 `tools/usb_linktest.py` gives a number (failed control reads, against a known-good device) before
 anything else is blamed.
+
+## 2026-10-02 — Licence file: LICENSE.md (the uniform rollout) supersedes 2026-09-24
+The user's uniform CC BY-NC 4.0 rollout (2026-10-01, commits 93348b2..f57235c on main) replaced
+`LICENSE` (summary + full legal code) with `LICENSE.md`, a plain-language page that links the official
+legal code. Asked on 2026-10-02, the user chose to adopt it: tests, the package (`/opt/linprinter/
+LICENSE.md`, the Debian copyright file), the About page and the README follow LICENSE.md. This
+replaces the 09-24 choice to ship the full legal code in the repository.

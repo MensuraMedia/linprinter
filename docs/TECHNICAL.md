@@ -76,7 +76,7 @@ simulates paper-out and similar states. CUPS' `ipptool get-printer-attributes.te
 
 ## Packaging and installation
 - `tools/build-deb.sh` builds `dist/linprinter_<version>_all.deb` (architecture all, xz). It contains:
-  - `/opt/linprinter` (src, resources, VERSION, LICENSE, README, run.sh);
+  - `/opt/linprinter` (src, resources, VERSION, LICENSE.md, README, run.sh);
   - `/usr/bin/linprinter`, which runs `python3 /opt/linprinter/src/main.py`;
   - `/usr/share/applications/linprinter.desktop` with `StartupWMClass=linprinter`;
   - the hicolor 512 px icon, the copyright file (the licence) and the changelog.

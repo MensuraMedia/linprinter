@@ -49,7 +49,7 @@ def test_package_contents():
         "./usr/bin/linprinter",
         "./opt/linprinter/src/main.py",
         "./usr/share/applications/linprinter.desktop",
-        "./opt/linprinter/LICENSE",
+        "./opt/linprinter/LICENSE.md",
     ):
         assert needed in files
     assert "__pycache__" not in files and "/tests/" not in files

@@ -30,6 +30,9 @@ All notable changes to LinPrinter. Semantic versioning; newest first.
 - **docs/USB-TROUBLESHOOTING.md**: the order to check things in, what each LinPrinter, kernel and ipp-usb
   message means, print-queue pitfalls, ipp-usb quirk matching (by model name, not USB id), and the
   2026-09-21 to 2026-10-02 TR150 record.
+- **Licence file is `LICENSE.md`**, from the uniform CC BY-NC 4.0 rollout on main (a plain-language
+  page linking the official legal code, replacing `LICENSE`). The package, the Debian copyright file,
+  the About page, the README and the licence tests follow it.
 - 81 tests (USB link parsing, queue sorting including the 2026-10-01 case, HTTP 503, no fallback,
   unidentified failing ports, the link-test tool).
 

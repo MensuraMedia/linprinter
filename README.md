@@ -16,7 +16,7 @@ USB-only privacy.
 | Platform | Linux desktop (Linux Mint 22 / Ubuntu 24.04 and other Debian-based systems), GTK 3, Python 3.10+ |
 | Connection | **USB cable only.** Wi-Fi and network printing are not supported at this time. |
 | Install | `bash install.sh` (runs from this folder), or the installer package [`dist/linprinter_0.2.5_all.deb`](dist/) (system-wide). Both work offline with the linux-peripherals package pool. |
-| Licence | [CC BY-NC 4.0](LICENSE): free to use, share and adapt with credit; commercial use needs our written permission |
+| Licence | [CC BY-NC 4.0](LICENSE.md): free to use, share and adapt with credit; commercial use needs our written permission |
 
 ## Contents
 
@@ -378,7 +378,7 @@ python3 tools/gen_api_docs.py                          # docs/api-reference.md
 ## 13. License
 
 LinPrinter is shared under the [**Creative Commons
-Attribution-NonCommercial 4.0 International**](LICENSE) licence (CC BY-NC 4.0).
+Attribution-NonCommercial 4.0 International**](LICENSE.md) licence (CC BY-NC 4.0).
 
 - **You're welcome to** use it free of charge, and to share and adapt it for
   any noncommercial purpose - personal and household use, education, research
@@ -390,6 +390,6 @@ Attribution-NonCommercial 4.0 International**](LICENSE) licence (CC BY-NC 4.0).
   [MensuraMedia](https://github.com/MensuraMedia).
 - The components LinPrinter builds on keep their own licences.
 
-This is a summary, not a substitute: the [`LICENSE`](LICENSE) file carries the
-full legal code, and https://creativecommons.org/licenses/by-nc/4.0/ has the
-official deed.
+This is a summary, not a substitute: [`LICENSE.md`](LICENSE.md) sets out the
+terms in plain words and links the official legal code
+(https://creativecommons.org/licenses/by-nc/4.0/legalcode), which governs.

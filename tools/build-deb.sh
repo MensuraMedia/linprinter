@@ -26,7 +26,7 @@ mkdir -p "$ROOT/DEBIAN" "$ROOT/opt/linprinter" "$ROOT/usr/bin" "$ROOT/usr/share/
 
 # the app itself (no caches, tests or development tools)
 cp -r "$APP_DIR/src" "$APP_DIR/resources" "$ROOT/opt/linprinter/"
-cp "$APP_DIR/VERSION" "$APP_DIR/LICENSE" "$APP_DIR/README.md" "$APP_DIR/run.sh" "$ROOT/opt/linprinter/"
+cp "$APP_DIR/VERSION" "$APP_DIR/LICENSE.md" "$APP_DIR/README.md" "$APP_DIR/run.sh" "$ROOT/opt/linprinter/"
 find "$ROOT/opt/linprinter" -name __pycache__ -type d -prune -exec rm -rf {} +
 find "$ROOT/opt/linprinter" -name '*.py[co]' -delete
 
@@ -56,7 +56,7 @@ install -Dm644 "$APP_DIR/tools/system/io.mensuramedia.linprinter.usb-reset.polic
     "$ROOT/usr/share/polkit-1/actions/io.mensuramedia.linprinter.usb-reset.policy"
 
 cp "$APP_DIR/resources/images/logo.png" "$ROOT/usr/share/icons/hicolor/512x512/apps/linprinter.png"
-cp "$APP_DIR/LICENSE" "$ROOT/usr/share/doc/linprinter/copyright"
+cp "$APP_DIR/LICENSE.md" "$ROOT/usr/share/doc/linprinter/copyright"
 gzip -9n < "$APP_DIR/changelog.md" > "$ROOT/usr/share/doc/linprinter/changelog.gz"
 
 # permissions: directories 755, files 644, executables 755

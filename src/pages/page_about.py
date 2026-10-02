@@ -107,7 +107,9 @@ class AboutPage(BasePage):
             "link to the licence. Commercial use needs written permission from MensuraMedia; we're happy to "
             "talk. The components LinPrinter builds on keep their own licences.",
         )
-        self._text(card, f"Full text: {tilde(os.path.join(APP_ROOT, 'LICENSE'))}", "muted", selectable=True)
+        self._text(
+            card, f"Full text: {tilde(os.path.join(APP_ROOT, 'LICENSE.md'))}", "muted", selectable=True
+        )
         self._text(card, "https://creativecommons.org/licenses/by-nc/4.0/", "muted", selectable=True)
 
         card = self.add_card("Your files")
