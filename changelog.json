@@ -94,5 +94,23 @@
     "version": "0.2.7",
     "type": "chore",
     "summary": "Licence changed to Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0), replacing the bespoke community licence; LICENSE carries the full legal code; README, About page, package description and docs updated; not retroactive."
+  },
+  {
+    "time": "2026-10-02T03:28:44Z",
+    "version": "0.2.8",
+    "type": "fix",
+    "summary": "Failing USB link named from the kernel log; missing printer still listed with the reason"
+  },
+  {
+    "time": "2026-10-02T03:28:44Z",
+    "version": "0.2.8",
+    "type": "fix",
+    "summary": "ipp-usb HTTP 503 is a link error: plain advice, and no fallback onto the same link via CUPS"
+  },
+  {
+    "time": "2026-10-02T03:28:44Z",
+    "version": "0.2.8",
+    "type": "fix",
+    "summary": "CUPS queues judged by device URI: a serial-port queue with the printer's name is flagged"
   }
 ]

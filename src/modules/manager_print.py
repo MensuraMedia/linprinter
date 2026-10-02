@@ -31,6 +31,7 @@ from backends.backend_base import (
 from backends.backend_cups import CupsBackend, queue_model
 from backends.backend_ipp import IppBackend
 from backends.backend_pdf import PdfBackend, pdf_capabilities
+from backends import usb_link
 from backends.usb_probe import likely_printers, probe
 from config.config_print import COLOR_MODES, DEFAULT_PAPER, PDF_PRINTER_ID, QUALITIES, SCALING
 from modules import manager_render as render
@@ -189,6 +190,9 @@ class PrintManager:
                     printers.append(
                         PrinterDevice(key=f"usb:{dev.usb_id}", name=label or dev.usb_id, usb=dev, hint=hint)
                     )
+            self._link_notes(printers, usb_link.recent())
+        if self.cups:
+            self._misdirected_notes(printers, self.cups.misdirected)
         printers.append(self.pdf_printer())
         self.printers = printers
         for p in printers:
@@ -196,6 +200,39 @@ class PrintManager:
                 "printer %s: %s", p.name, ", ".join(m.label for m in p.methods) or f"no method ({p.hint})"
             )
         return printers
+
+    def _link_notes(self, printers, stats):
+        """Warn about a USB link that keeps failing - on the printer, or, when the remembered
+        printer has dropped off entirely, as an entry of its own so the list isn't just empty"""
+        for p in printers:
+            if p.usb and usb_link.failing(p.usb.port_path, stats):
+                p.notes.append(usb_link.advice(p.usb.port_path, stats))
+        info = self.settings.get("last_printer_info") or {}
+        usb = info.get("usb") or {}
+        if not usb.get("id") or any(p.usb and p.usb.usb_id == usb["id"] for p in printers):
+            return
+        ports = usb_link.failing_ports(stats, usb["id"], usb.get("port", ""))
+        if ports:
+            printers.append(
+                PrinterDevice(
+                    key=f"usb:{usb['id']}",
+                    name=info.get("name") or usb["id"],
+                    hint=usb_link.advice(ports[-1], stats),
+                )
+            )
+
+    @staticmethod
+    def _misdirected_notes(printers, misdirected):
+        """Warn about a CUPS queue named for a printer that sends jobs somewhere else"""
+        for queue, uri in misdirected:
+            key = model_key(queue_model(queue))
+            match = next((p for p in printers if not p.virtual and key and model_key(p.name) == key), None)
+            if match:
+                match.notes.append(
+                    f'The system print queue "{queue}" sends jobs to {uri.split("?")[0]}, not to '
+                    "this printer, so Print in other programs fails. Remove it with: "
+                    f"sudo lpadmin -x {queue}"
+                )
 
     @staticmethod
     def should_reconnect(level, misses, seconds_since_last_try, busy, virtual=False):
@@ -286,7 +323,9 @@ class PrintManager:
         method = printer.methods[0]
         try:
             state, reasons, markers = method.backend.status(method.target)
-        except PrintError:
+        except PrintError as e:
+            if e.code == "link":  # its own words say what to do; "unreachable" would not
+                return "error", str(e), "unknown", [], []
             level, message = describe("unknown", [], reachable=False)
             return level, message, "unknown", [], []
         level, message = describe(state, reasons)
@@ -435,6 +474,8 @@ class PrintManager:
                     try:
                         state, reasons, _m = method.backend.status(method.target)
                     except PrintError as e:
+                        if e.needs_user:  # e.g. a failing USB link: every USB method shares it
+                            raise
                         last = e
                         log.info("method %s unreachable (%s); trying the next", method.code, e)
                         continue

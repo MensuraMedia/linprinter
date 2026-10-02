@@ -82,6 +82,33 @@ def test_unreachable_is_plain_error():
     assert e.value.code == "unreachable"
 
 
+def test_http_503_is_a_failing_usb_link():
+    """ipp-usb answers 503 when it can't move data over USB: say so, as code "link" """
+    import http.server
+    import threading
+
+    class Unavailable(http.server.BaseHTTPRequestHandler):
+        def do_POST(self):
+            self.rfile.read(int(self.headers.get("Content-Length", 0)))
+            self.send_response(503)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def log_message(self, *_a):
+            pass
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), Unavailable)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        with pytest.raises(ipp.IppError) as e:
+            ipp.IppClient(
+                f"ipp://127.0.0.1:{server.server_port}/ipp/print", timeout=5
+            ).get_printer_attributes()
+        assert e.value.code == "link" and "USB connection" in str(e.value)
+    finally:
+        server.shutdown()
+
+
 @requires_ipptool
 def test_ipptool_passes_against_test_printer():
     t = TestPrinter()

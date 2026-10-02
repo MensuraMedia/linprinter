@@ -46,6 +46,22 @@ reason suffix (-error / -warning / -report) and a list of reasons that stop prin
 are shown in words. `user_must_act` blocks fallback for media-empty, media-jam, door-open, cover-open,
 marker-supply-empty and input-tray-missing.
 
+## USB link health and stray queues (0.2.8)
+- `backends/usb_link.py` reads `journalctl -k --since -10min` and counts, per port, connection errors
+  (`error -71`, `Cannot enable`, `not accepting address`, `can't set config`, descriptor read failures)
+  and disconnects, plus the USB ids seen there. A port is failing at 2 errors or 3 disconnects. A
+  printer on a failing port gets a note; a remembered printer that has dropped off the bus is listed,
+  with no method, when its id or port is failing - instead of an empty list.
+- ipp-usb answers HTTP 503 when it can't move data over USB. That is `IppError` / `PrintError` code
+  **`link`**, which counts as "the user must act": no fallback, because a driverless CUPS queue goes
+  through the same ipp-usb link (on 2026-10-01 the fallback spooled a job onto it, and the cut-off job
+  left the printer hung).
+- `backend_cups.sort_queues`: a permanent queue owns its name (`lp -d NAME` reaches it even while a
+  driverless printer is announced as NAME), so `lpstat -v` is read first and its device URI decides.
+  `implicitclass://NAME/` (cups-browsed) resolves to the printer announced as NAME. A queue on
+  `serial:`, `parallel:` or `file:` is *misdirected*; a matching printer gets a note with the
+  `lpadmin -x` command.
+
 ## Test printer
 `TestPrinter` is a ThreadingHTTPServer on 127.0.0.1:0 (HTTP/1.1). It serves
 `resources/test-printer/tr150-attributes.json` (112 attributes with their tags; UUID zeroed, device-id

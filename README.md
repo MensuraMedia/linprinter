@@ -290,7 +290,9 @@ maintenance**, then print the **line page** to check.
 | You see | Try |
 |---|---|
 | Red power mark, "Printer may be off. Check power settings." | Switch the printer on, check the USB cable, press **Find** (LinPrinter also keeps looking by itself). `systemctl status ipp-usb` should show it running while the printer is plugged in. |
-| The connection keeps dropping; the printer has to be found again and again | Almost always the **USB port or cable**, not the printer. Check with `journalctl -k -b \| grep "usb .*error -71"`: if one port keeps appearing, move the printer to another port directly on the computer, and try another cable. `/var/log/ipp-usb/*.log` showing `libusb_bulk_transfer: Input/Output Error` is the same fault. |
+| The connection keeps dropping; the printer has to be found again and again | LinPrinter says so itself: "The USB link to this printer keeps failing (… on port 3-3 …)" on the Printers page and in `--list-printers`, read from the kernel log. Almost always the **USB port or cable** - no driver or setting fixes it. Check with `journalctl -k -b \| grep "usb .*error -71"`: if one port keeps appearing, move the printer to another port directly on the computer, and try another cable. `/var/log/ipp-usb/*.log` showing `libusb_bulk_transfer: Input/Output Error` is the same fault. |
+| "The printer's USB connection isn't carrying data (ipp-usb answered 503…)" | The printer is stuck, usually holding a job the link cut off. Turn it off and on (or press **Reconnect**). LinPrinter won't send the job to a CUPS queue instead: that queue goes through the same USB link. |
+| "The system print queue … sends jobs to serial:/dev/ttyS0, not to this printer" | A queue with the printer's name points somewhere else, so Print in other programs fails. Remove it with the `sudo lpadmin -x …` command shown; CUPS makes a correct one when the printer is connected. |
 | "Load paper in the rear tray." | Load paper and print again. LinPrinter won't send the job another way while the printer needs you. |
 | "The printer stopped the job." | Check the printer's display or lights (jam, cover, ink), then print again. |
 | Streaks or faded colours | Print the **quality page** (Printers → Setup and test). If lines are broken, run cleaning from **Printer settings and maintenance**. |
@@ -312,6 +314,8 @@ no account, no telemetry and no update check.
   ignores network print queues (`NETWORK_PRINTING = False`). It talks to
   ipp-usb only on `127.0.0.1`. The printer's own pages it opens are on
   `localhost` too, served over USB.
+- **Kernel log:** to tell a failing USB cable or socket from a printer problem, LinPrinter reads the
+  last 10 minutes of `journalctl -k` and keeps only USB port numbers, error counts and USB ids.
 - **Logs** are redacted: serial numbers, device IDs and your home folder
   path are removed. Diagnostics are saved only where you choose.
 - **Installation:**

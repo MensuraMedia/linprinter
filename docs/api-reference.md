@@ -25,7 +25,7 @@ Layout Configuration Centralized layout dimensions and spacing constants
 
 Print Configuration Friendly names and groups for what printers report. Nothing here is printer-specific: the Print page shows only what the chosen printer supports.
 
-Constants: `COLOR_MODES`, `QUALITIES`, `DEFAULT_QUALITY`, `PAGE_CHOICES`, `SCALING`, `PAPER_GROUPS`, `FRIENDLY_SIZES`, `DEFAULT_PAPER`, `FRIENDLY_TYPES`, `TYPE_ORDER`, `PDF_PRINTER_ID`, `DEFAULT_PDF_FOLDER`, `PDF_SIZES`, `IPP_USB_PORTS`, `IPP_PATHS`, `NETWORK_PRINTING`, `STATUS_EVERY`, `STATUS_EVERY_WHILE_PRINTING`
+Constants: `COLOR_MODES`, `QUALITIES`, `DEFAULT_QUALITY`, `PAGE_CHOICES`, `SCALING`, `PAPER_GROUPS`, `FRIENDLY_SIZES`, `DEFAULT_PAPER`, `FRIENDLY_TYPES`, `TYPE_ORDER`, `PDF_PRINTER_ID`, `DEFAULT_PDF_FOLDER`, `PDF_SIZES`, `IPP_USB_PORTS`, `IPP_PATHS`, `NETWORK_PRINTING`, `STATUS_EVERY`, `RECONNECT_AFTER_MISSES`, `RECONNECT_EVERY`, `STATUS_EVERY_WHILE_PRINTING`
 
 ### `src/config/config_themes.py`
 
@@ -50,7 +50,7 @@ Constants: `USER_ACTION_REASONS`
 |---|---|
 | class `PrintError(Exception)` | A print problem in plain words; code tells the engine whether to try another method |
 | &nbsp;&nbsp;`.__init__(self, message, code='error')` |  |
-| &nbsp;&nbsp;`.needs_user(self)` | True if the user must fix something (paper, jam, cover, ink) |
+| &nbsp;&nbsp;`.needs_user(self)` | True if the user must fix something (paper, jam, cover, ink, a failing USB link). |
 | class `PaperSize()` | One paper size the printer offers |
 | &nbsp;&nbsp;`.label(self)` | Friendly name, e.g. "A4 (210 × 297 mm)" |
 | `parse_pwg_size(keyword)` | (width_mm, height_mm) from a PWG self-describing media name, or None |
@@ -73,12 +73,14 @@ Constants: `USER_ACTION_REASONS`
 
 CUPS backend (method P2) The system print spooler: permanent queues and the driverless queues CUPS creates on demand (e.g. "Canon_TR150_series_USB"). Used when direct IPP isn't possible, and for printers that need a CUPS driver (Gutenprint, HPLIP, vendor PPDs). Only local USB queues are used: network queues are skipped (NETWORK_PRINTING is off).  Commands: lpstat (destinations, jobs, state), lp (submit), cancel.
 
-Constants: `QUALITY_ENUM`
+Constants: `QUALITY_ENUM`, `MISDIRECTED_SCHEMES`
 
 | Symbol | Purpose |
 |---|---|
 | `_run(args, timeout=20)` | Run a CUPS command; PrintError if CUPS isn't available |
 | `is_local_uri(uri)` | True for USB queues: usb://, ipp-usb driverless ("(USB)" in the DNS-SD name), or loopback |
+| `resolve_implicit(uri, announced)` | The printer behind a cups-browsed queue (implicitclass://NAME/ stands for the |
+| `sort_queues(permanent, announced)` | (usable [(queue, uri)], misdirected [(queue, uri)]) from `lpstat -v` and `lpstat -l -e`. |
 | `parse_destinations(text)` | [(queue, uri)] from `lpstat -l -e` output ("name type info uri") |
 | `parse_device_uris(text)` | [(queue, uri)] from `lpstat -v` output ("device for NAME: URI") |
 | `queue_model(queue)` | A readable model name from a queue name (e.g. "Canon TR150 series") |
@@ -134,7 +136,7 @@ Print to PDF (method PDF) A built-in destination that saves exactly what would p
 
 IPP (Internet Printing Protocol) codec and client, standard library only.  Encoding follows RFC 8010 (binary message format); operations and attributes follow RFC 8011 and PWG 5100.x (IPP Everywhere). Only what LinPrinter needs:    Get-Printer-Attributes, Validate-Job, Print-Job, Get-Jobs,   Get-Job-Attributes, Cancel-Job, Identify-Printer  Attributes are written as (name, tag, values). Values are Python values; a collection's value is a list of member attributes in the same form. Decoded responses become dicts: {name: value} (single value) or {name: [values]} (several), with collections as dicts.
 
-Constants: `GROUP_TAGS`, `OUT_OF_BAND`, `STRING_TAGS`, `IDENTIFY_PRINTER`, `OPERATION_NAMES`, `JOB_STATES`, `PRINTER_STATES`, `QUALITY`
+Constants: `GROUP_TAGS`, `OUT_OF_BAND`, `STRING_TAGS`, `IDENTIFY_PRINTER`, `OPERATION_NAMES`, `JOB_STATES`, `PRINTER_STATES`, `QUALITY`, `TRUNCATED`
 
 | Symbol | Purpose |
 |---|---|
@@ -147,6 +149,8 @@ Constants: `GROUP_TAGS`, `OUT_OF_BAND`, `STRING_TAGS`, `IDENTIFY_PRINTER`, `OPER
 | `_decode_value(tag, data)` | Python value of one attribute value |
 | `_add(target, name, value)` | Store a value: single values stay single, repeats become a list |
 | class `_Multi(list)` | A list of several values of one attribute (a real list value, not a list of lists) |
+| `_short(data, pos, need)` | True when the answer stops before `need` more bytes (a cut-short response) |
+| `_read_length(data, pos)` | A 2-byte length at pos; raises IppError rather than struct.error when it isn't there |
 | `_read_collection(data, pos)` | Decode collection members after a begCollection value; returns (dict, new position) |
 | `decode_message(data)` | (status or operation, request id, [(group tag, {name: value}), ...]) |
 | `values(attrs, name)` | An attribute's values as a list (empty if missing) |
@@ -158,7 +162,8 @@ Constants: `GROUP_TAGS`, `OUT_OF_BAND`, `STRING_TAGS`, `IDENTIFY_PRINTER`, `OPER
 | &nbsp;&nbsp;`.request(self, operation, groups, document=None, timeout=None)` | Send a request (optionally streaming a document file); returns (status, groups) |
 | &nbsp;&nbsp;`._ok(self, operation, status, groups)` | Raise IppError unless the status is successful |
 | &nbsp;&nbsp;`._group(groups, tag)` | Merged attributes of one group tag |
-| &nbsp;&nbsp;`.get_printer_attributes(self, requested=('all', 'media-col-database'))` | All printer attributes as {name: value} |
+| &nbsp;&nbsp;`.get_printer_attributes(self, requested=('all',), extra=('media-col-database',))` | All printer attributes as {name: value}. |
+| &nbsp;&nbsp;`._attributes(self, requested)` | One Get-Printer-Attributes request |
 | &nbsp;&nbsp;`.validate_job(self, job_attrs, document_format)` | Check a job ticket; returns (status, unsupported attributes) |
 | &nbsp;&nbsp;`.print_job(self, path, document_format, job_attrs, job_name='LinPrinter job', timeout=600)` | Send a document; returns the job attributes (job-id, job-state, ...) |
 | &nbsp;&nbsp;`.get_jobs(self, which='not-completed', limit=50)` | Jobs on the printer: [{job-id, job-name, job-state, ...}] |
@@ -188,9 +193,24 @@ Constants: `FIXTURE`
 | &nbsp;&nbsp;`.handle(self, body)` | One IPP request -> response bytes |
 | &nbsp;&nbsp;`._end_of_attributes(body)` | Offset of the document data after the IPP attributes |
 
+### `src/backends/usb_link.py`
+
+USB Link How the USB link to a printer has behaved lately, read from the kernel log: error -71 (EPROTO, a transfer that failed electrically), failed enumeration and disconnects, per port. No driver, setting or service cures these - they come from the cable, the socket, power or the device's own USB port - so LinPrinter says that in plain words instead of searching for a printer that keeps vanishing.  Reads `journalctl -k`, which needs the adm or systemd-journal group; without it the answer is simply "nothing known". Only port numbers and USB ids are kept, never serial numbers.
+
+Constants: `WINDOW_MINUTES`, `ERRORS_FAILING`, `DISCONNECTS_FAILING`, `FAILURE`, `PORT`, `IDS`
+
+| Symbol | Purpose |
+|---|---|
+| `parse(text)` | {port: {"errors", "disconnects", "ids"}} from kernel log lines |
+| `kernel_log(minutes=WINDOW_MINUTES)` | Kernel messages of the last few minutes ("" if the journal can't be read) |
+| `recent(minutes=WINDOW_MINUTES)` | parse() of the recent kernel log |
+| `failing(port, stats)` | True if the link on this port has kept failing |
+| `failing_ports(stats, usb_id='', port='')` | Failing ports that held this device (by USB id) or are its known port |
+| `advice(port, stats, minutes=WINDOW_MINUTES)` | What to tell the user about a failing link, in plain words |
+
 ### `src/backends/usb_probe.py`
 
-USB Probe Driver-independent USB facts for printer detection, read straight from sysfs and the udev database (no subprocesses, no root): identity, speed, interface classes (7 = printer; 7/1/4 = IPP-over-USB), the kernel driver in use (usblp) and device-node access.
+USB Probe Driver-independent USB facts for printer detection, read straight from sysfs and the udev database (no subprocesses, no root): identity, speed, interface classes (7 = printer; 7/1/4 = IPP-over-USB), the kernel driver in use (usblp) and device-node access.  sysfs shows only each interface's *current* alternate setting, and printers routinely hide IPP-over-USB on an alternate setting (the Canon TR150 offers 7/1/4 on alt 1 of interfaces 1 and 2, while alt 0 is vendor-specific). The device's raw descriptor blob (`descriptors`, world-readable) lists every alternate setting, so it is parsed too - otherwise a driverless printer looks like a plain USB printer and gets the wrong advice.
 
 Constants: `SYS_USB`, `UDEV_DATA`
 
@@ -198,14 +218,33 @@ Constants: `SYS_USB`, `UDEV_DATA`
 |---|---|
 | class `UsbDevice()` | One USB device and what its interfaces suggest |
 | &nbsp;&nbsp;`.usb_id(self)` | VID:PID string |
-| &nbsp;&nbsp;`.has_class(self, cls, sub=None, proto=None)` | True if any interface matches the class (and optional subclass/protocol) |
+| &nbsp;&nbsp;`.has_class(self, cls, sub=None, proto=None)` | True if any interface matches the class (and optional subclass/protocol). |
 | &nbsp;&nbsp;`.kinds(self)` | Why this device is a printer (empty list = probably not one) |
 | &nbsp;&nbsp;`.drivers(self)` | Kernel drivers bound to its interfaces (e.g. usblp) |
 | `_read(path, default='')` | Contents of a small sysfs/udev file, stripped (default if unreadable) |
 | `_udev_properties(sys_path)` | E: properties from the udev database for a device (empty if unavailable) |
+| `descriptor_interfaces(sys_path)` | (class, subclass, protocol) of every interface descriptor, alternate settings included. |
 | `probe(sys_root=SYS_USB)` | All USB devices (not hubs' interfaces) with printer-relevant facts |
 | `likely_printers(devices)` | USB devices that are printers (or printer-capable multifunction devices) |
 | `speed_label(mbps)` | Human USB speed name |
+
+### `src/backends/usb_reset.py`
+
+USB reconnect Re-attaches a USB printer that the kernel left unconfigured (the classic "printer is plugged in, nothing sees it" state: `bConfigurationValue` empty, ipp-usb retrying "unable to find current configuration").  Detaching and re-attaching a USB device is a machine-wide kernel operation, so it needs root. LinPrinter never holds privileges itself: it asks pkexec, which shows the desktop's own password dialog, runs the small helper the installer places in /usr/local/lib/linprinter, and exits. Nothing is left running.  If something has already made the device's `authorized` file writable by your user (a udev rule of your own, for example), it is re-attached in place and no password is asked. LinPrinter's installer does not add such a rule: granting a user permanent control over a device's USB attachment is a system-wide decision that belongs to whoever administers the machine, not to an app installer.
+
+Constants: `SYS_USB`, `HELPER`, `PRINTER_CLASS`, `PORT_RE`, `SETTLE_SECONDS`
+
+| Symbol | Purpose |
+|---|---|
+| `sysfs_path(port_path, sys_usb=SYS_USB)` | /sys path of a USB device from its port ("3-4") |
+| `usb_id_at(port_path, sys_usb=SYS_USB)` | "vvvv:pppp" of the device on that port ("" if the port is empty) |
+| `find_port(usb_id, sys_usb=SYS_USB)` | Where that USB id is plugged in now ("" if nowhere). Survives a move to another port. |
+| `is_usb_printer(port_path, sys_usb=SYS_USB)` | True if that port holds a device with a USB printer interface (class 07) |
+| `configured(port_path, sys_usb=SYS_USB)` | True when the kernel has set a configuration (the device is usable) |
+| `writable(port_path, sys_usb=SYS_USB)` | True when this user may re-attach the device without a password (permissions allow it) |
+| `shell_command(port_path, sys_usb=SYS_USB)` | The command that re-attaches the device (also shown to the user for a terminal) |
+| `_run(argv, timeout=120)` |  |
+| `reset(port_path, usb_id='', sys_usb=SYS_USB)` | Re-attach one printer's USB device. Returns (ok, message for the user). |
 
 ### `src/modules/app_context.py`
 
@@ -258,12 +297,19 @@ Constants: `FINAL_JOB_STATES`, `JOB_TIMEOUT`
 |---|---|
 | `model_key(name)` | Normalised model name used to match one printer offered by several methods |
 | `generic_capabilities()` | Capabilities for a CUPS-only printer that can't be asked over IPP |
+| `ipp_usb_installed()` | True when ipp-usb is installed (it lives in sbin, which is not always on PATH) |
+| `unusable_hint(dev)` | Why a connected USB printer can't be printed to yet, and what to do about it |
 | class `PrintManager()` | Printers, document, tickets, jobs |
 | &nbsp;&nbsp;`.__init__(self, settings, test_printer_uri=None, use_cups=True, probe_usb=True)` | test_printer_uri: add the built-in test printer (--test-printer, tests) |
 | &nbsp;&nbsp;`._in_thread(work, on_done, on_error)` | Run work() in a thread; deliver the result or a plain error on the GTK thread (once) |
 | &nbsp;&nbsp;`.pdf_printer(self)` | The built-in Print to PDF destination |
 | &nbsp;&nbsp;`.discover(self)` | Every printer (grouped, methods ranked) plus Print to PDF |
+| &nbsp;&nbsp;`._link_notes(self, printers, stats)` | Warn about a USB link that keeps failing - on the printer, or, when the remembered |
+| &nbsp;&nbsp;`._misdirected_notes(printers, misdirected)` | Warn about a CUPS queue named for a printer that sends jobs somewhere else |
+| &nbsp;&nbsp;`.should_reconnect(level, misses, seconds_since_last_try, busy, virtual=False)` | Search for the printer again? (unreachable a few times, not printing, not too often) |
 | &nbsp;&nbsp;`.refresh_printers(self, on_done, on_error)` | Find printers in the background |
+| &nbsp;&nbsp;`.remembered_usb(self)` | {"id", "port"} of the last USB printer used ({} if none) - for Reconnect |
+| &nbsp;&nbsp;`.reconnect_usb(self, printer=None)` | Re-attach the chosen printer (or the remembered one) on USB: (ok, message) |
 | &nbsp;&nbsp;`.printer(self, printer_id)` | A printer by id (None if unknown) |
 | &nbsp;&nbsp;`.remember(self, printer)` | Store the printer in use, so the next start reaches it without a full search |
 | &nbsp;&nbsp;`.restore(self, on_done, on_error)` | Reach the remembered printer directly (one IPP request instead of a full search) |
@@ -512,6 +558,7 @@ Constants: `OPTION_BUTTON_WIDTH`
 | &nbsp;&nbsp;`.set_busy(self, busy, printing=False)` | Enable or disable controls while working; Cancel only while printing |
 | &nbsp;&nbsp;`.remember(self, key, value)` | Persist an option choice and refresh the summary |
 | &nbsp;&nbsp;`.looking(self)` | Spinner in place of the power icon while searching |
+| &nbsp;&nbsp;`.on_reconnect(self)` | Re-attach the printer's USB device (password prompt), then look again |
 | &nbsp;&nbsp;`.show_power(self, level, message)` | Green / amber / red power icon; the message under the list unless all is well |
 | &nbsp;&nbsp;`.startup(self)` | At start: reach the remembered printer directly; otherwise search |
 | &nbsp;&nbsp;`.refresh_printers(self)` | Search for printers in the background (not while printing) |
@@ -520,6 +567,8 @@ Constants: `OPTION_BUTTON_WIDTH`
 | &nbsp;&nbsp;`.current_printer(self)` | The chosen PrinterDevice (or None) |
 | &nbsp;&nbsp;`.on_printer_changed(self, _combo)` | Offer the chosen printer's options; check its status |
 | &nbsp;&nbsp;`.check_status(self)` | Ask the printer how it is (in the background) |
+| &nbsp;&nbsp;`.maybe_reconnect(self, printer)` | The printer stopped answering: look for it again, quietly, now and then |
+| &nbsp;&nbsp;`.reconnected(self, printers)` | A quiet search finished: keep the chosen printer selected; say so if it is back |
 | &nbsp;&nbsp;`.poll_status(self)` | Every few seconds: refresh the power icon (not while printing, the job reports then) |
 | &nbsp;&nbsp;`.fill_options(self, printer)` | Paper sizes (grouped), types, colours, qualities for this printer |
 | &nbsp;&nbsp;`.on_size_or_type(self)` | Paper size or type changed: remember it and update Borderless |
@@ -563,6 +612,7 @@ Constants: `LEVEL_CSS`
 | &nbsp;&nbsp;`.open_test(self, p)` | Put the quality test page on the Print page |
 | &nbsp;&nbsp;`.rows(self, p)` | (section, [(key, value)]) for a printer |
 | &nbsp;&nbsp;`.on_status(self, printer, status)` | Show a printer's state and ink |
+| &nbsp;&nbsp;`.reconnect(self, printer, label)` | Re-attach the printer's USB device, then look for printers again |
 | &nbsp;&nbsp;`.identify(self, printer, label)` | Make the printer flash |
 | &nbsp;&nbsp;`.on_shown(self)` | Refresh the sections when opened |
 
@@ -631,10 +681,11 @@ Settings Page Theme; Print to PDF folder (~/Documents/prints by default); low-in
 
 Display images for the Preview A 600 dpi colour page is ~100 MB once decoded, so showing it straight from the scan is slow. Each page gets a small display copy ("proxy", at most PROXY_MAX_SIDE pixels, JPEG) made once, in the background as pages arrive. The large view and the thumbnails are drawn from it; only a deep zoom goes back to the original scan. Quick Edit layers and rotation are applied at display time, so the proxy never goes stale.
 
-Constants: `PROXY_MAX_SIDE`
+Constants: `PROXY_MAX_SIDE`, `MAX_RENDER_PIXELS`
 
 | Symbol | Purpose |
 |---|---|
+| `_fit_within(size, max_w, max_h)` | The size that fits max_w x max_h keeping the aspect ratio, capped by MAX_RENDER_PIXELS. |
 | class `DisplayCache()` | Proxy files for pages (thread-safe), kept in a cache folder |
 | &nbsp;&nbsp;`.__init__(self, folder)` | folder: where proxies are written (the session's temp folder) |
 | &nbsp;&nbsp;`.proxy(self, path)` | (proxy path, factor) for a page image, creating it if needed. |

@@ -21,6 +21,7 @@ src/
     backend_pdf.py        Print to PDF
     backend_base.py       PrinterDevice, Method, PrinterCapabilities (+ defaults, alert, local links), PrintError
     usb_probe.py          /sys USB facts (printer class, driver, speed) — no serials
+    usb_link.py           kernel-log link health per port (error -71, disconnects) — plain-words advice
     test_printer.py       IPP server replaying the real TR150 attributes
   features/               FeatureRegistry + feature_ink_alerts, feature_profiles (switchable, removable)
   utils/                  logging (redacted), paths, icons (Phosphor), display, imaging

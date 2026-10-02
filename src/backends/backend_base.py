@@ -28,12 +28,15 @@ class PrintError(Exception):
 
     def __init__(self, message, code="error"):
         super().__init__(message)
-        self.code = code  # user | unreachable | busy | unsupported | rejected | error
+        self.code = code  # user | link | unreachable | busy | unsupported | rejected | error
 
     @property
     def needs_user(self):
-        """True if the user must fix something (paper, jam, cover, ink)"""
-        return self.code == "user"
+        """True if the user must fix something (paper, jam, cover, ink, a failing USB link).
+
+        A failing link is shared by every USB method (P1 and a driverless CUPS queue both go
+        through ipp-usb), so falling back would only spool the job onto the same broken link."""
+        return self.code in ("user", "link")
 
 
 @dataclass
@@ -230,6 +233,7 @@ class PrinterDevice:
     usb: object = None  # usb_probe.UsbDevice when known
     firmware: str = ""
     hint: str = ""
+    notes: list = field(default_factory=list)  # warnings about its setup (failing USB link, stray queue)
     virtual: bool = False  # Print to PDF / the test printer
     restored: bool = False
 

@@ -139,6 +139,8 @@ class PrintersPage(BasePage):
             inner.pack_start(
                 self.label(f"Printer says: {p.caps.alert}", "status-busy", wrap=True), False, False, 0
             )
+        for note in p.notes:
+            inner.pack_start(self.label(note, "status-busy", wrap=True), False, False, 0)
 
         grid = Gtk.Grid(column_spacing=18, row_spacing=3)
         rows = self.rows(p)

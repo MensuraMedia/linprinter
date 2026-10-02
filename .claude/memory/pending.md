@@ -26,3 +26,14 @@
   asking.
 - The host, not the app, is the likely villain for the USB faults: see `docs/HOST-USB.md` in
   linux-peripherals. Every high-speed device shares one root hub and cannot be moved off it.
+
+## Open after 0.2.8 (2026-10-01)
+
+- **TR150 USB link still failing on this host** (port 3-3, new cable: clean for 2 min, then failed to
+  enumerate after a power cycle). LPM off (`usbcore.quirks=04a9:18a4:k`) changed nothing - it is set
+  until reboot only. Next: the rear USB 2.0 socket; the printer on another computer (only clean test
+  of the printer's own USB port). `~/projects/canon-printer/tr150-usb.sh` has the steps.
+- **The user's document has not printed** (job 17 cut off and cancelled).
+- Correct `linux-peripherals/docs/HOST-USB.md` §6/§7: `init-reset` already defaults to `none` in
+  ipp-usb 0.9.24, so test #1's reset rationale is moot; only `usb-max-interfaces = 1` remains.
+- Misdirected-queue note not seen live yet (queue deleted before the fix).

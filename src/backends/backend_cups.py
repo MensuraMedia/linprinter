@@ -49,6 +49,47 @@ def is_local_uri(uri):
     return uri.startswith("usb:") or "(USB)" in text or host.startswith("127.") or host == "localhost"
 
 
+MISDIRECTED_SCHEMES = ("serial:", "parallel:", "file:")
+
+
+def resolve_implicit(uri, announced):
+    """The printer behind a cups-browsed queue (implicitclass://NAME/ stands for the
+    driverless printer announced as NAME); other URIs unchanged"""
+    if not uri.startswith("implicitclass:"):
+        return uri
+    name = urllib.parse.unquote(urllib.parse.urlsplit(uri).netloc).split("@")[0]
+    return announced.get(name, uri)
+
+
+def sort_queues(permanent, announced):
+    """(usable [(queue, uri)], misdirected [(queue, uri)]) from `lpstat -v` and `lpstat -l -e`.
+
+    A permanent queue owns its name: `lp -d NAME` goes to it even while a driverless
+    printer is announced under the same name, so its own device URI decides. (A raw
+    queue on serial:/dev/ttyS0 called "Canon_TR150_series_USB" once hid behind its
+    driverless namesake: listed as usable, it rejected every job.)"""
+    lookup = dict(announced)
+    usable, misdirected, taken = [], [], set()
+    for queue, uri in permanent:
+        taken.add(queue)
+        if is_local_uri(resolve_implicit(uri, lookup)):
+            usable.append((queue, uri))
+        elif uri.startswith(MISDIRECTED_SCHEMES):
+            misdirected.append((queue, uri))
+            log.warning("queue %s prints to %s, not to a USB printer", queue, uri.split("?")[0])
+        else:
+            log.info("skipped network queue %s (network printing is off)", queue)
+    for queue, uri in announced:
+        if queue in taken or queue.split("@")[0] in taken:
+            continue
+        taken.add(queue)
+        if is_local_uri(uri):
+            usable.append((queue, uri))
+        else:
+            log.info("skipped network queue %s (network printing is off)", queue)
+    return usable, misdirected
+
+
 def parse_destinations(text):
     """[(queue, uri)] from `lpstat -l -e` output ("name type info uri")"""
     out = []
@@ -111,22 +152,18 @@ class CupsBackend:
         """True if the CUPS client tools are installed"""
         return bool(shutil.which("lp") and shutil.which("lpstat"))
 
+    misdirected = ()  # [(queue, uri)] from the last list_printers(): see sort_queues
+
     def list_printers(self):
         """[(queue, uri)] of local USB queues, permanent and driverless"""
+        self.misdirected = []
         if not self.available():
             return []
-        seen, out = set(), []
-        for queue, uri in parse_destinations(_run(["lpstat", "-l", "-e"]).stdout) + parse_device_uris(
-            _run(["lpstat", "-v"]).stdout
-        ):
-            if queue in seen:
-                continue
-            seen.add(queue)
-            if is_local_uri(uri):
-                out.append((queue, uri))
-            else:
-                log.info("skipped network queue %s (network printing is off)", queue)
-        return out
+        usable, self.misdirected = sort_queues(
+            parse_device_uris(_run(["lpstat", "-v"]).stdout),
+            parse_destinations(_run(["lpstat", "-l", "-e"]).stdout),
+        )
+        return usable
 
     def submit(self, queue, ticket, caps, pdf, pages, work_dir, job_name):
         """Render the chosen pages to PDF and hand them to CUPS; returns the CUPS job id"""

@@ -350,6 +350,13 @@ class IppClient:
             conn.close()
         except (OSError, http.client.HTTPException) as e:
             raise IppError(f"The printer didn't answer ({e}).", code="unreachable")
+        if response.status == 503:  # ipp-usb: it is running but can't move data over USB
+            raise IppError(
+                "The printer's USB connection isn't carrying data (ipp-usb answered 503, Service "
+                "Unavailable). Turn the printer off and on, or press Reconnect; if it keeps "
+                "happening, try a short USB 2.0 cable straight into the computer.",
+                code="link",
+            )
         if response.status != 200:
             raise IppError(f"The printer answered HTTP {response.status}.", code="error")
         status, _rid, groups_out = decode_message(data)

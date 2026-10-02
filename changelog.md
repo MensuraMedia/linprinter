@@ -2,6 +2,27 @@
 
 All notable changes to LinPrinter. Semantic versioning; newest first.
 
+## 0.2.8 — 2026-10-01
+
+- **A failing USB link is named, not hidden.** LinPrinter reads the last 10 minutes of the kernel log
+  (`journalctl -k`) and counts connection errors (`error -71`, `Cannot enable`, failed addressing) and
+  disconnects per USB port. A printer on a failing port gets a note on the Printers page and in
+  `--list-printers`; a remembered printer that has dropped off the bus is still listed, with the
+  reason, instead of leaving only Print to PDF: "The USB link to this printer keeps failing … That is
+  the cable, the socket or the printer's USB port, not a driver."
+- **No fallback onto the same broken link.** ipp-usb answers HTTP 503 when it can't move data over
+  USB. That now reads "The printer's USB connection isn't carrying data … turn the printer off and on,
+  or press Reconnect", and LinPrinter no longer falls back to the CUPS queue: a driverless queue goes
+  through the same ipp-usb link. On 2026-10-01 that fallback spooled a 4 MB job onto a link that
+  dropped every 30 seconds, and the job cut off mid-transfer left the printer hung.
+- **CUPS queues are judged by where they print, not by their name.** A raw queue on
+  `serial:/dev/ttyS0` called `Canon_TR150_series_USB` (the driverless queue's own name) was listed as
+  a working method, because the driverless announcement with that name was read first - but `lp -d`
+  reaches the permanent queue, which rejected every job. Permanent queues now decide their name; a
+  cups-browsed `implicitclass://` queue resolves to the printer it stands for; a queue on `serial:`,
+  `parallel:` or `file:` is reported on the matching printer with the `sudo lpadmin -x` command.
+- 79 tests (USB link parsing, queue sorting including the 2026-10-01 case, HTTP 503, no fallback).
+
 ## 0.2.7 — 2026-09-24
 
 - **Licence changed to Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**,

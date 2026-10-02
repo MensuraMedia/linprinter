@@ -96,6 +96,35 @@ def test_paper_out_does_not_fall_back(setup):
     assert not t.jobs
 
 
+def test_failing_usb_link_does_not_fall_back(setup):
+    """P1 and a driverless CUPS queue share ipp-usb's link: don't spool the job onto it"""
+    from backends.backend_base import Method, PrintError
+
+    class Broken:
+        def status(self, _target):
+            raise PrintError("The printer's USB connection isn't carrying data.", "link")
+
+    class Spooler:
+        submitted = []
+
+        def status(self, _target):
+            return "idle", [], []
+
+        def submit(self, *args):
+            self.submitted.append(args)
+            return "Q-1"
+
+    _t, pm, doc, _tmp = setup
+    printer = pm.discover()[0]
+    spooler = Spooler()
+    printer.methods = [Method("P1", Broken(), "ipp://127.0.0.1:60000/ipp/print"), Method("P2", spooler, "Q")]
+    pm.open_document(doc)
+    box = run(pm, printer, pm.ticket(printer, {}), [1])
+    assert "USB connection" in box["error"]
+    assert spooler.submitted == []
+    assert pm.status(printer)[:2] == ("error", "The printer's USB connection isn't carrying data.")
+
+
 def test_print_to_pdf(setup):
     _t, pm, doc, tmp = setup
     pdf = pm.printer("pdf:")

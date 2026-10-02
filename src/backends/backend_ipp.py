@@ -45,7 +45,7 @@ def ipp_usb_uris():
 
 def _error(e):
     """PrintError for an IppError"""
-    code = {"unreachable": "unreachable", "busy": "busy", "unsupported": "unsupported"}.get(
+    code = {"unreachable": "unreachable", "link": "link", "busy": "busy", "unsupported": "unsupported"}.get(
         e.code, "rejected"
     )
     return PrintError(str(e), code)

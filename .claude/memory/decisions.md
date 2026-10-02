@@ -51,3 +51,15 @@ Bounds-checking alone was not enough: a reply that happened to stop at an attrib
 no paper sizes. `decode_message` now requires the end-of-attributes tag. Attributes are still requested
 in one go (Canon answers a named `media-col-database` more fully than a plain "all"), with a fallback
 to the essentials so a dropped extra costs only the borderless combinations.
+
+## 2026-10-01 — A failing USB link stops the job; no fallback to CUPS
+ipp-usb's HTTP 503 means it can't move data over USB. P1 and a driverless CUPS queue share that link,
+so falling back only spools the job onto it - on 2026-10-01 that left a cut-off job hanging the
+printer. Code `link` counts as "user must act". A `usb://` CUPS queue would not help either: ipp-usb
+holds the device, and the fault is below every driver.
+
+## 2026-10-01 — No custom Canon driver
+Asked for a "universal Canon driver". Declined in favour of driverless IPP (already universal for
+Canons with IPP-over-USB) plus clearer diagnosis: the failures were electrical (-71) and a hung
+endpoint, which any driver - Canon's own included - would hit identically. Canons without 7/1/4 need
+cnijfilter2, which is not a distro package; the linux-peripherals installer explains that instead.
