@@ -35,8 +35,9 @@ python3 tools/walkthrough.py && bash tools/build-deb.sh
 - Methods, best first: P1 direct IPP (ipp-usb on 127.0.0.1) → P2 CUPS queue; PDF (Print to PDF); T (test printer). Never fall back when the user must act (`USER_ACTION_REASONS`).
 - Offer only what the printer reports (`PrinterCapabilities` from Get-Printer-Attributes); printer-specific words in `config/config_print.py`.
 - Anything blocking runs off the GTK thread (`PrintManager._in_thread`); results return via `GLib.idle_add`.
-- Colours only from `config/config_themes.py`; exceptions: ink gauge (cartridge colours) and test pages.
-- New pages: subclass `pages/page_base.BasePage`, add one line to `ui/content_area.PAGES` and `ui/sidebar.NAV_ITEMS`.
+- One theme, Graphite Night: colours only from `src/lintheme/tokens.py` (vendored from LinAppTemplate, `~/projects/linapptemplate` / github.com/MensuraMedia/linapptemplate; update it there, then copy); exceptions: ink and paper colours and test pages. Build the UI from `lintheme.gtk3.components`; the design is `docs/design/redesign-2026/`.
+- New pages: subclass `pages/page_base.BasePage`, add one line to `ui/content_area.PAGES` and `ui/sidebar.NAV_ITEMS` (keep at most four destinations).
+- UI changes: run the `design-adversary` agent (`.claude/agents/`) against fresh walkthrough screenshots before committing.
 - Optional functionality goes in `src/features/feature_<name>.py`; the core only calls `FeatureRegistry` hooks.
 - USB only: nothing may use the network (`NETWORK_PRINTING = False`); IPP only to loopback; printer web pages only on localhost; no telemetry. Keep README §8 true.
 - Never print on real hardware from tests or tools; use `TestPrinter`. Printing on the user's printer needs their go-ahead.

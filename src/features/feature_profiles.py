@@ -55,26 +55,27 @@ class Feature(BaseFeature):
         return {**BUILT_IN, **(self.option("saved", {}) or {})}
 
     def extend_print_page(self, page):
-        """A Profile row at the top of the print options"""
+        """A Profile row at the end of More options"""
         gi.require_version("Gtk", "3.0")
         from gi.repository import Gtk
 
+        from lintheme.gtk3 import components as ui
+
         row = Gtk.Box(spacing=8)
-        self.combo = Gtk.ComboBoxText()
-        self.combo.append("", "Choose a profile…")
+        self.combo = ui.select([("", "Choose a profile…")], "", accessible_name="Profile")
         for name in self.profiles():
             self.combo.append(name, name)
         self.combo.set_active_id("")
+        self.combo.set_hexpand(True)
         self.combo.connect(
             "changed", lambda c: self.apply(page, c.get_active_id()) if c.get_active_id() else None
         )
-        save = Gtk.Button(label="Save as profile…")
-        save.connect("clicked", lambda *_: self.save_current(page))
-        row.pack_start(self.combo, False, False, 0)
+        save = ui.button("Save as…", lambda: self.save_current(page), small=True)
+        save.set_tooltip_text("Save the current choices as a profile")
+        row.pack_start(self.combo, True, True, 0)
         row.pack_start(save, False, False, 0)
         page.profile_row = page.form_row("Profile", row)
-        page.options_card.pack_start(page.profile_row, False, False, 0)
-        page.options_card.reorder_child(page.profile_row, 1)  # below the card title
+        page.options_card.pack_start(page.profile_row, False, False, 0)  # last: features add, never reorder
         page.profile_row.set_no_show_all(True)
         page.ctx.on("features-changed", lambda *_: self._visibility(page))
         self._visibility(page)
@@ -94,11 +95,20 @@ class Feature(BaseFeature):
         gi.require_version("Gtk", "3.0")
         from gi.repository import Gtk
 
+        from lintheme.gtk3 import components as ui
+
         dlg = Gtk.Dialog(title="Save profile", transient_for=page.ctx.window, modal=True)
-        dlg.add_buttons("_Cancel", Gtk.ResponseType.CANCEL, "_Save", Gtk.ResponseType.OK)
-        entry = Gtk.Entry()
-        entry.set_placeholder_text("Profile name")
-        dlg.get_content_area().pack_start(entry, False, False, 8)
+        ui.css(dlg, "lt-root", "lt-dialog")
+        ui.css(dlg.add_button("Cancel", Gtk.ResponseType.CANCEL), "lt-btn")
+        ui.css(dlg.add_button("Save", Gtk.ResponseType.OK), "lt-btn", "lt-primary")
+        dlg.set_default_response(Gtk.ResponseType.OK)
+        area = dlg.get_content_area()
+        area.set_border_width(20)
+        area.set_spacing(10)
+        area.pack_start(ui.text("Save these choices as a profile", "lt-heading"), False, False, 0)
+        entry = ui.entry(placeholder="Profile name", accessible_name="Profile name", width_chars=24)
+        entry.set_activates_default(True)
+        area.pack_start(entry, False, False, 0)
         dlg.show_all()
         ok = dlg.run() == Gtk.ResponseType.OK and entry.get_text().strip()
         name = entry.get_text().strip()

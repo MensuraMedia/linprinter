@@ -19,9 +19,10 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("GdkPixbuf", "2.0")
 from gi.repository import GdkPixbuf, Gtk  # noqa: E402
 
+from lintheme import tokens  # noqa: E402
 from utils.util_paths import resource  # noqa: E402
 
-DEFAULT_COLOR = "#e6e6e6"
+DEFAULT_COLOR = tokens.COLOR["text"]  # Graphite Night text
 _theme_color = [DEFAULT_COLOR]
 
 

@@ -7,15 +7,15 @@ of [LinScanner](https://github.com/MensuraMedia/linscanner), built the same
 way: the same interface, the same switchable feature modules, and the same
 USB-only privacy.
 
-![LinPrinter: the Print page](docs/screenshots/01-print.png)
+![LinPrinter: the Print page](docs/screenshots/02-print-ready.png)
 
 | | |
 |---|---|
-| Version | 0.2.5 (see [changelog.md](changelog.md)) |
+| Version | 0.3.0 (see [changelog.md](changelog.md)) |
 | Verified printer | Canon TR150 series (USB, driverless) |
 | Platform | Linux desktop (Linux Mint 22 / Ubuntu 24.04 and other Debian-based systems), GTK 3, Python 3.10+ |
 | Connection | **USB cable only.** Wi-Fi and network printing are not supported at this time. |
-| Install | `bash install.sh` (runs from this folder), or the installer package [`dist/linprinter_0.2.5_all.deb`](dist/) (system-wide). Both work offline with the linux-peripherals package pool. |
+| Install | `bash install.sh` (runs from this folder), or the installer package [`dist/linprinter_0.3.0_all.deb`](dist/) (system-wide). Both work offline with the linux-peripherals package pool. |
 | Licence | [CC BY-NC 4.0](LICENSE.md): free to use, share and adapt with credit; commercial use needs our written permission |
 
 ## Contents
@@ -36,21 +36,22 @@ USB-only privacy.
 
 ## 1. Features
 
+Four places, in the rail on the left: **Print**, **Activity**, **Printer**, and **Settings**. The
+header shows your printer's state on every page (Ready · Busy · Needs you · Can't reach); click it
+to open Printer. One look throughout: the Graphite Night theme, shared with the other Lin\* apps.
+
 | Area | What you get |
 |---|---|
-| **Detect Printer** | **Find**, the printer list, and a power mark. If the printer stops answering (asleep, switched off and on, or a bad USB port), LinPrinter searches again by itself every 20 seconds and says "<printer> is back" - no need to press Find: green when the printer is ready, amber when it needs attention, red when it's off or stopped. The message under it is plain, such as "Printer may be off. Check power settings." or "Load paper in the rear tray." LinPrinter remembers the printer, so the next start reaches it straight away. |
-| **Documents** | PDF, PNG, JPEG, TIFF (multi-page), BMP, GIF and plain text. Open one with **Open…**, drop it on the Print page, or **right-click it in your file manager → Open With → LinPrinter**. |
-| **Print Options** | Copies · Color or Black & White · Draft / Normal / High · Pages (All, a range such as `1-3, 5`, Odd, Even, Current) · Paper Size (grouped: documents, photos, envelopes, cards) · Paper Type (plain, photo, glossy, matte, envelopes, Hagaki …) · Borderless · Fit to page or Actual size. **Only the options your printer really has are offered.** A line under the options says exactly what will print. |
-| **Preview** | The pages exactly as they will print: your paper, the printer's margins shaded, colour or grey, and pages turned to suit the paper. It zooms from a quarter size up to **16×** (Ctrl + wheel, or the buttons), with page navigation and 1- or 2-row thumbnails. Previews are rendered at 140 dpi, so zooming in shows real detail rather than a blur. |
-| **Queue** | Waiting, printing and finished jobs, with the pages done, the time sent and how each job was sent. **Cancel job** stops a waiting or printing one. |
-| **Recent** | Documents you've printed, newest first. The folder icon opens the folder; the document icon prints it again. Clear all entries, or those older than 5 / 10 / 20 / 30 days. |
-| **Reconnect** | When a printer is plugged in but nothing sees it (the kernel left it unconfigured), **Reconnect** re-attaches that one printer. It appears next to **Find** when the mark is red, and on the Printers page. See [section 6](#6-setting-up-and-testing-your-printer). |
-| **Printers Found** | Every printer and how LinPrinter reaches it, best way first. Also USB details, capabilities, firmware, **ink levels** drawn in the cartridges' own colours, and **Identify** (the printer flashes). |
-| **Setup and test** | The printer's own **defaults** (and **Use in LinPrinter**); a **quality test page** and a **line / alignment page**; and the printer's own **settings / maintenance** and **ink** pages (cleaning, nozzle check, alignment, quiet mode …). See [section 6](#6-setting-up-and-testing-your-printer). |
-| **Print to PDF** | Saves to `~/Documents/prints` (change it in Settings), with the same paper sizes and preview. No printer needed. |
-| **Feature modules** | **Ink alerts** (on) warns before printing when a cartridge is low. **Print profiles** (off) adds one-click presets (Everyday, Draft, B&W document, Best quality, Photo 4×6 borderless, Envelope #10) plus your own. You can switch off or delete either one in Settings → Features. |
-| **Reliable printing** | LinPrinter talks to the printer directly (IPP Everywhere over USB, through ipp-usb) and falls back to the CUPS queue. It checks each job with the printer first. It never retries another way when *you* need to act (paper out, jam, cover open, ink empty); it tells you what to do instead. |
-| **Comfort** | Themes, a resizable window that snaps to screen halves and quarters, and the app icon in the panel and Alt+Tab. |
+| **Print** | Four cards: **Printer** (its state in words, with the fix in place when it needs you), **Document**, **Paper** (size grouped, type, borderless where possible), **Output** (all the same width; copies, colour, quality, pages: all, **custom** — one page such as `2`, or pages such as `1-3, 5` or `3 to 5` — or the current one). **More options** adds odd/even pages, fit or actual size, and profiles. The **live preview** sits beside the options: your paper, the printer's margins shaded, zoom up to 16×, page thumbnails. The bar at the bottom says exactly what will print and holds **Print** (Ctrl+P); when printing isn't possible it says why beside the button. |
+| **Documents** | PDF, PNG, JPEG, TIFF (multi-page), BMP, GIF and plain text. **Open…** (Ctrl+O), drop a file on the Print page, or **right-click it in your file manager → Open With → LinPrinter**. |
+| **Activity** | **Now printing** with progress and **Cancel print** (asks first). **History**: what printed, or didn't and why, with the settings used; **Print again** opens it with the same settings; **Show file**; remove one entry or clear entries older than 30 days, 90 days or a year. |
+| **Printer** | The printer's state, big and in words. **Ink and paper** (the cartridges' own colours, with the percentage in words). **Connection**: the USB port, how LinPrinter reaches it, connection errors from the last 10 minutes, and **Test connection** (20 small questions; nothing is printed or changed). **Look after the printer**: quality and line test pages, Look first, the printer's own settings page. The printer's **own defaults** (use them in LinPrinter), and the **details**. **Identify** makes it flash. |
+| **Troubleshooter** | When the printer can't be reached: guided steps, cheapest first - power and cable, **another USB cable**, test the link, power-cycle, another socket, system print queues - each showing what LinPrinter measures right now, and stopping at the first step that works. |
+| **Reconnect** | When the printer is plugged in but the system left it unusable, **Reconnect…** re-attaches that one printer (it asks first; your system asks for the password). See [section 6](#6-setting-up-and-testing-your-printer). |
+| **Print to PDF** | In the printer list (**Change** on the Printer card). Saves to `~/Documents/prints` (change it in Settings). No printer needed. |
+| **Feature modules** | **Ink alerts** (on) warns before printing when a cartridge is low; it never blocks printing. **Print profiles** (off) adds presets (Everyday, Draft, B&W document, Best quality, Photo 4×6 borderless, Envelope #10) plus your own. Switch either off in Settings → Printing. |
+| **Reliable printing** | LinPrinter talks to the printer directly (IPP Everywhere over USB, through ipp-usb), with the CUPS queue as a backup, and checks each job with the printer first. It never sends a job another way when *you* need to act (paper, jam, cover, ink) or when the USB connection itself is failing; it tells you what to do instead. |
+| **Comfort** | A window that snaps to screen halves and quarters (the preview folds away in a narrow window), keyboard shortcuts (Alt+1…4 for the four places, Ctrl+P, Ctrl+O, F5), dropdowns that never change when you scroll past them (the wheel scrolls the page), and the app icon in the panel and Alt+Tab. |
 
 ## 2. A tour in screenshots
 
@@ -58,37 +59,45 @@ The screenshots are made by `tools/walkthrough.py` with the built-in test
 printer, which answers exactly like a Canon TR150. They are regenerated for
 every release.
 
-### Print and preview
+### Print
 
-| Print a report | Preview (1 row) | Preview (2 rows) |
-|---|---|---|
-| ![Print page](docs/screenshots/01-print.png) | ![Preview](docs/screenshots/02-preview.png) | ![Preview, two rows](docs/screenshots/02b-preview-two-rows.png) |
-
-| Printing… | Printed | A photo, borderless 4 × 6 in | Photo preview |
-|---|---|---|---|
-| ![Printing](docs/screenshots/03-printing.png) | ![Printed](docs/screenshots/03b-printed.png) | ![Borderless photo](docs/screenshots/04-photo-borderless.png) | ![Photo preview](docs/screenshots/04b-photo-preview.png) |
-
-### Jobs, PDF and history
-
-| Queue | Print to PDF | Recent |
-|---|---|---|
-| ![Queue](docs/screenshots/05-queue.png) | ![Print to PDF](docs/screenshots/06-print-to-pdf.png) | ![Recent](docs/screenshots/09-recent.png) |
-
-### Printers, setup and test
-
-| Printers Found | Setup and test |
+| Ready, with the live preview | More options and custom pages |
 |---|---|
-| ![Printers Found](docs/screenshots/07-printers.png) | ![Setup and test](docs/screenshots/07b-printer-setup.png) |
+| ![Print](docs/screenshots/02-print-ready.png) | ![More options](docs/screenshots/02b-print-more-options.png) |
+| **Printing** | **Printed** |
+| ![Printing](docs/screenshots/03-printing.png) | ![Printed](docs/screenshots/03b-printed.png) |
+| **A photo, borderless 4 × 6 in** | **Print to PDF** |
+| ![Borderless photo](docs/screenshots/04-photo-borderless.png) | ![Print to PDF](docs/screenshots/06-print-to-pdf.png) |
+| **More options: which pages, fit, profiles** | **A page list that needs a fix** |
+| ![More options, end](docs/screenshots/02c-print-more-options-end.png) | ![Page list check](docs/screenshots/02d-page-list-check-it.png) |
+| **Needs you: paper out** | **Paper out while printing (the job waits)** |
+| ![Paper out](docs/screenshots/12-paper-out.png) | ![Paper out while printing](docs/screenshots/12b-paper-out-while-printing.png) |
+| **Can't reach** | **The menu** |
+| ![Can't reach](docs/screenshots/13-cant-reach.png) | ![Menu](docs/screenshots/15-menu.png) |
+
+### Activity and the printer
+
+| Activity: now printing and history | Activity: history with results |
+|---|---|
+| ![Activity](docs/screenshots/05-activity.png) | ![History](docs/screenshots/05b-activity-history.png) |
+| **Activity: didn't print** | **Activity: nothing printed yet** |
+| ![Didn't print](docs/screenshots/05c-activity-didnt-print.png) | ![Activity empty](docs/screenshots/05a-activity-empty.png) |
+| **Printer: health, upkeep, details** | **Troubleshooter: fixed** |
+| ![Printer](docs/screenshots/07-printer.png) | ![Troubleshooter fixed](docs/screenshots/07d-troubleshooter-fixed.png) |
+| **Troubleshooter: another cable** | **Troubleshooter: test the link** |
+| ![Troubleshooter](docs/screenshots/07b-troubleshooter-cable.png) | ![Link test](docs/screenshots/07c-troubleshooter-link-test.png) |
+| **Printer: can't reach** | **First start** |
+| ![Printer can't reach](docs/screenshots/14-printer-cant-reach.png) | ![First start](docs/screenshots/01-print-first-run.png) |
 
 | Quality test page | Line and alignment page |
 |---|---|
 | ![Quality test page](docs/screenshots/08-test-page-quality.png) | ![Line test page](docs/screenshots/08-test-page-lines.png) |
 
-### Settings, About and a problem
+### Settings
 
-| Settings | About | Paper out |
+| Printing | Privacy and diagnostics | About |
 |---|---|---|
-| ![Settings](docs/screenshots/10-settings.png) | ![About](docs/screenshots/11-about.png) | ![Paper out](docs/screenshots/12-paper-out.png) |
+| ![Settings](docs/screenshots/09-settings.png) | ![Privacy](docs/screenshots/10-settings-privacy.png) | ![About](docs/screenshots/11-settings-about.png) |
 
 ## 3. Compatibility
 
@@ -103,7 +112,7 @@ and systems.
 | Systems | Linux Mint 22 (tested). Ubuntu 24.04 (the package is tested offline in a clean ubuntu:24.04). Other Debian-based systems with Python 3.10+, GTK 3, CUPS and Ghostscript. |
 | Not yet | Wi-Fi / network printers, automatic two-sided printing, N-up and booklets |
 
-To check a printer, open **Printers** or run `./run.sh --list-printers`.
+To check a printer, open **Printer** or run `./run.sh --list-printers`.
 
 **Requirements** (all distro packages, no pip): python3, python3-gi,
 python3-gi-cairo, gir1.2-gtk-3.0, python3-pil, cups, cups-client,
@@ -181,19 +190,20 @@ bash install.sh --uninstall   # removes the menu entry, icon and package (if ins
 
 ## 5. Using LinPrinter
 
-1. Plug the printer in with its USB cable and switch it on. On the
-   **Print** page, the power mark turns green and the printer is chosen for
-   you. If the mark is red, check the cable and power, then press **Find**.
-2. **Open…** a document, drop one on the page, or right-click it in your file manager and choose
-   **Open With → LinPrinter** (that opens LinPrinter with the document ready to print).
-3. Choose the options. The line under them says what will print, for
-   example "1 copy · Black & White · Normal · A4 (210 × 297 mm) · Plain paper
-   · Fit to page · 3 page(s)".
-4. Press **Preview** to see the pages, or **Print**. The progress bar and
-   the status line follow the job, and the **Queue** shows it too. **Cancel**
-   stops it.
-5. To print a document again, find it in **Recent** and click its document
-   icon.
+1. Plug the printer in with its USB cable and switch it on. On **Print**, the
+   Printer card says **Ready** and the printer is chosen for you. If it says
+   **Can't reach**, the card tells you what to do; **Troubleshoot** walks you
+   through it, starting with the cable.
+2. **Open…** a document (Ctrl+O), drop one on the page, or right-click it in your file manager and
+   choose **Open With → LinPrinter**.
+3. Choose the options. The preview beside them changes as you go, and the bar
+   at the bottom says what will print, for example "1 copy · 3 pages - Black &
+   white · Normal · Letter (8.5 × 11 in) · Plain paper · fit to page".
+4. Press **Print** (Ctrl+P). The bar follows the job and ends with "Printed 3
+   pages on … · 62 s"; **Activity** shows it too. **Cancel print** stops it
+   (it asks first).
+5. To print a document again, find it in **Activity** and press **Print
+   again**: it opens with the settings it was printed with.
 
 Tips:
 - **Photos:** choose Paper Size *Photo 4 × 6 in*, Paper Type *Photo paper*,
@@ -201,18 +211,23 @@ Tips:
   profile. Borderless is offered only where the printer allows it.
 - **Envelopes:** choose the envelope size and type, *Envelope #10* for
   example. The preview shows how the address lands.
-- **Pages → Current** prints the page selected in Preview.
-- **Print to PDF** is in the printer list. The file is saved as
+- **Pages → Custom** prints the pages you list in **Page list**: one page (`2`), a run (`1-3`) or
+  both (`1-3, 5, 8-10`). The count shows under the label; a list that doesn't fit the document says
+  "Check it", and Print waits until it's fixed.
+- **Pages → Current** prints the page selected in the preview.
+- **Paper runs out while printing?** The header turns **Needs you**, the bar says what it's waiting
+  for, and the job continues once you load paper. LinPrinter never sends it another way meanwhile.
+- **Print to PDF** is in the printer list (**Change** on the Printer card). The file is saved as
   `<name>-<date-time>.pdf` in `~/Documents/prints`.
 
 ## 6. Setting up and testing your printer
 
-Open **Printers**. Each printer has a **Setup and test** section:
+Open **Printer** (or click the status in the header). It shows the chosen printer:
 
-- **Printer's defaults**: the colour, quality, paper size, paper type and
-  fitting the printer itself uses. **Use in LinPrinter** makes them the
+- **The printer's own defaults**: the colour, quality, paper size, paper type and
+  fitting the printer itself uses. **Use these in LinPrinter** makes them the
   Print page's starting choices; you can still change them for each job.
-- **Test the printer**:
+- **Look after the printer**:
   - **Print quality page** has colour blocks at 100 / 50 / 25 %, 11 grey
     steps, fine lines for each ink, a gradient, text from 6 to 16 pt, and a
     frame at the printable edge. It shows streaks, gaps (blocked nozzles),
@@ -223,8 +238,8 @@ Open **Printers**. Each printer has a **Setup and test** section:
     preview it or change the paper first.
 
   Each page asks before printing, uses one sheet of plain paper, and isn't
-  added to Recent.
-- **Maintenance**: **Printer settings and maintenance** and **Ink details**
+  added to Activity.
+- **The printer's own settings page** (and **Ink details**, under Ink and paper)
   open the printer's own pages. ipp-usb serves them on this computer over
   the USB cable, so nothing goes on the network. That is where you'll find
   cleaning, nozzle check, head alignment, quiet mode, the power-off timer and
@@ -235,7 +250,8 @@ Open **Printers**. Each printer has a **Setup and test** section:
   cartridge.
 - **Reconnect** re-attaches the printer when it's plugged in but nothing can see it - the state where
   `lsusb` lists it yet it has no working interfaces, and ipp-usb keeps retrying "unable to find current
-  configuration". It appears on the Print page next to **Find** whenever a USB printer isn't answering.
+  configuration". It is offered on the Print page's Printer card and on the Printer page whenever a USB
+  printer isn't answering, and it asks before doing anything.
 
   **Why it asks for a password.** Printing doesn't need one: your user talks to ipp-usb, a system
   service that already owns the printer. Re-attaching is different - it tells the *kernel* to detach and
@@ -252,25 +268,25 @@ Open **Printers**. Each printer has a **Setup and test** section:
   From a terminal: `./run.sh --reconnect`. **Ink alerts** warns before printing when one is low.
 
 A good routine: when prints look streaky or faded, print the **quality
-page**. If lines are broken, run cleaning from **Printer settings and
-maintenance**, then print the **line page** to check.
+page**. If lines are broken, run cleaning from the **printer's own settings
+page**, then print the **line page** to check.
 
 ## 7. Settings, files and command line
 
-**Settings**:
-- theme (with colour swatches);
-- Print to PDF folder;
-- the low-ink warning level;
-- network printing (shown as *Not Supported*);
-- feature modules;
-- diagnostics: open the log folder, or save a diagnostics zip on this
-  computer.
+**Settings**, in three sections:
+- **Printing**: the Print to PDF folder, the low-ink warning level, what to do at
+  start (use the last printer, or search every time), and the optional features;
+- **Privacy and diagnostics**: what stays on this computer (USB only, no network,
+  no account, no telemetry, no AI), the files LinPrinter keeps, Save diagnostics
+  and the log folder;
+- **About**: version, what it prints, licence, system versions, credits, keyboard
+  shortcuts.
 
 | What | Where |
 |---|---|
 | Settings | `~/.config/linprinter/settings.json` |
 | Print to PDF | `~/Documents/prints` (changeable) |
-| Recent list | `~/.local/share/linprinter/recent.json` |
+| Activity history | `~/.local/share/linprinter/recent.json` |
 | Logs (14 days, redacted) | `~/.local/state/linprinter/logs/` |
 | Jobs being prepared | `/tmp/linprinter-*/`, deleted when LinPrinter closes |
 | Package install | `/opt/linprinter`, `/usr/bin/linprinter` |
@@ -278,7 +294,7 @@ maintenance**, then print the **line page** to check.
 ```text
 ./run.sh                    start LinPrinter (or `linprinter` after a package install)
 ./run.sh --test-printer     built-in test printer + Print to PDF only (no hardware, nothing printed)
-./run.sh --page printers    open on a page: print, preview, queue, recent, printers, settings, about
+./run.sh --page printer     open on a page: print, activity, printer, settings (0.2 names still work)
 ./run.sh --list-printers    list the printers LinPrinter can reach, then exit
 ./run.sh FILE               open a document ready to print (what "Open With > LinPrinter" runs)
 ./run.sh --debug            verbose log, also in the terminal
@@ -292,15 +308,15 @@ measure the link, what each message means).
 
 | You see | Try |
 |---|---|
-| Red power mark, "Printer may be off. Check power settings." | Switch the printer on, check the USB cable, press **Find** (LinPrinter also keeps looking by itself). `systemctl status ipp-usb` should show it running while the printer is plugged in. |
-| The connection keeps dropping; the printer has to be found again and again | **Try another USB cable first**, straight into the computer - even one that worked for a while (two faulty cables caused a week of TR150 failures). LinPrinter says so itself: "The USB link to this printer keeps failing (… on port 3-3 …)" on the Printers page and in `--list-printers`, read from the kernel log. Measure the link with `sudo python3 tools/usb_linktest.py 04a9:18a4 --compare <a known-good VID:PID>`: any failures mean a bad link. No driver or setting fixes it. Full guide: [docs/USB-TROUBLESHOOTING.md](docs/USB-TROUBLESHOOTING.md). |
+| **Can't reach** in the header and on the Printer card | Switch the printer on and check the USB cable; **Troubleshoot** walks through the checks, cable first. LinPrinter also keeps looking by itself (F5 searches now). `systemctl status ipp-usb` should show it running while the printer is plugged in. |
+| The connection keeps dropping; the printer has to be found again and again | **Try another USB cable first**, straight into the computer - even one that worked for a while (two faulty cables caused a week of TR150 failures). LinPrinter says so itself: "The USB link to this printer keeps failing (… on port 3-3 …)" on the Printer page and in `--list-printers`, read from the kernel log. Measure the link with `sudo python3 tools/usb_linktest.py 04a9:18a4 --compare <a known-good VID:PID>`: any failures mean a bad link. No driver or setting fixes it. Full guide: [docs/USB-TROUBLESHOOTING.md](docs/USB-TROUBLESHOOTING.md). |
 | "The printer's USB connection isn't carrying data (ipp-usb answered 503…)" | The printer is stuck, usually holding a job the link cut off. Turn it off and on (or press **Reconnect**). LinPrinter won't send the job to a CUPS queue instead: that queue goes through the same USB link. |
 | "The system print queue … sends jobs to serial:/dev/ttyS0, not to this printer" | A queue with the printer's name points somewhere else, so Print in other programs fails. Remove it with the `sudo lpadmin -x …` command shown; CUPS makes a correct one when the printer is connected. |
 | "Load paper in the rear tray." | Load paper and print again. LinPrinter won't send the job another way while the printer needs you. |
 | "The printer stopped the job." | Check the printer's display or lights (jam, cover, ink), then print again. |
-| Streaks or faded colours | Print the **quality page** (Printers → Setup and test). If lines are broken, run cleaning from **Printer settings and maintenance**. |
+| Streaks or faded colours | Print the **quality page** (Printer → Look after the printer). If lines are broken, run cleaning from the printer's own settings page. |
 | Only "Print to PDF" is listed | Run `./run.sh --list-printers`. Check `lsusb` shows the printer, and that `cups` and `ipp-usb` are installed (`bash install.sh`). |
-| An option is missing | LinPrinter shows only what the printer reports. See Printers → Capabilities. |
+| An option is missing | LinPrinter shows only what the printer reports. See Printer → Details. |
 | Installer says FAIL | Read the FAIL line; it names what's missing. Run `bash install.sh` again after fixing it. |
 | Something else | Settings → Diagnostics → **Save diagnostics…**, then look at the zip or send it to whoever helps you. It stays on your computer until you share it. |
 

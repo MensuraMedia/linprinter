@@ -77,3 +77,25 @@ The user's uniform CC BY-NC 4.0 rollout (2026-10-01, commits 93348b2..f57235c on
 legal code. Asked on 2026-10-02, the user chose to adopt it: tests, the package (`/opt/linprinter/
 LICENSE.md`, the Debian copyright file), the About page and the README follow LICENSE.md. This
 replaces the 09-24 choice to ship the full legal code in the repository.
+
+## 2026-10-02 — 0.3.0 redesign: four destinations, one theme (Graphite Night)
+From the UX review and mockups (the user approved them). Print / Activity / Printer / Settings; one
+status vocabulary (Ready · Busy · Needs you · Can't reach). Only Graphite Night: the user decided no
+other themes are needed, so there is no theme picker. GTK 3 stays (the apps are GTK 3; GTK 4.14 lacks
+CSS variables and libadwaita 1.5 lacks ToggleGroup, so a port gains nothing now).
+
+## 2026-10-02 — The theme kit is vendored, not a dependency
+The kit lives in `~/projects/linapptemplate` (LinAppTemplate, github.com/MensuraMedia/linapptemplate;
+named lin-dashboard-theme until 2026-10-02) and is copied into `src/lintheme`.
+Why: distro packages only, offline install, and the kit has no package. Change the kit first, then
+copy it; record the kit version in the change manifest.
+
+## 2026-10-02 — Link test by IPP, not by USB control reads
+The mockup's 200 USB control reads need root. Test connection asks the printer 20
+Get-Printer-Attributes(printer-state) over ipp-usb: no password, nothing printed, and it measures the
+same path a print takes. The USB-level test stays a tool (`tools/usb_linktest.py`).
+
+## 2026-10-02 — A design adversary reviews every UI change
+`.claude/agents/design-adversary.md` checks screenshots and code against the mockup and the tokens
+(read-only). A UI change is done when it passes, or its departure is listed in
+`docs/design/redesign-2026/README.md`.

@@ -2,18 +2,19 @@
 
 | Area | What | Where |
 |---|---|---|
-| Detect Printer | Find, printer list, power mark (spinner / ok / warn / error), plain message, remembered printer, status every 5 s | pages/page_print.py |
-| Document | Open…, drag and drop; PDF, images, text | page_print, manager_render.normalise |
-| Print Options | Copies, Color, Quality, Pages (All / Range / Odd / Even / Current), Paper Size (grouped), Paper Type, Borderless, Fit; summary line | page_print, config_print |
-| Printing | Direct IPP → CUPS; Validate-Job; job followed to the end; Cancel; no fallback when the user must act | manager_print, backend_ipp, backend_cups |
-| Preview | Exact pages, margins shaded, grey for B&W, rotated; zoom; 1/2-row thumbnails; sets Current page | pages/page_preview.py |
-| Queue | Jobs table, Cancel job, Refresh, auto-refresh | pages/page_queue.py |
-| Recent | Printed documents; folder, print again, delete, clear by age | pages/page_recent.py, manager_documents |
-| Printers Found | Methods, USB facts, capabilities, firmware, ink gauges, Identify, check again | pages/page_printers.py |
-| Setup and test | Printer's defaults + Use in LinPrinter; quality and line test pages; Look first; printer settings / maintenance and ink pages (localhost) | page_printers, manager_testpage, manager_print |
+| Shell | Header with status chip (Ready · Busy · Needs you · Can't reach) and menu; rail with Print, Activity, Printer, Settings; Alt+1…4, Ctrl+P, Ctrl+O, F5; compact layout below 960 px | ui/app_window.py, ui/sidebar.py |
+| Print: printer | Remembered printer reached first, status every 5 s, quiet re-search; state in words with its fix (banner + actions); Change popover (printers, Print to PDF, search again) | pages/page_print.py |
+| Print: document | Open… (Ctrl+O), drag and drop, Open With; PDF, images, text | page_print, manager_render.normalise |
+| Print: options | Paper (size grouped, type, borderless with reason), Output (copies, colour, quality, pages all/custom/current), More options (odd/even, fit, profiles); dropdowns ignore the mouse wheel | page_print, config_print |
+| Print: preview | Live beside the options; margins shaded; zoom to 16×; thumbnails; current page | page_print, ui/components/component_preview.py |
+| Print: action bar | Summary; Print with the reason when disabled; printing progress and Cancel (asks); printed end moment with Show in Activity / Print again; saved PDF with Show in folder | page_print, lintheme ActionBar |
+| Printing | Direct IPP → CUPS; Validate-Job; followed to the end; no fallback when the user must act or the USB link fails | manager_print, backend_ipp, backend_cups |
+| Activity | Now printing (progress, Cancel print); History with result and settings used, Print again (same settings), Show file, Remove, Clear older than 30/90/365 days | pages/page_activity.py, manager_documents |
+| Printer | Hero status; Ink and paper; Connection (port, route, kernel-log link errors, Test connection, Reconnect…); Look after the printer (test pages, Look first, printer's own page); own defaults; Details; stray-queue banner with the command | pages/page_printer.py |
+| Troubleshooter | Six steps, cheapest first (cable first), live evidence from the kernel log and the link test | pages/page_printer.py |
+| Settings | Printing (PDF folder, low ink %, start behaviour, features), Privacy and diagnostics, About | pages/page_settings.py |
+| Theme | Graphite Night only (LinAppTemplate, vendored); WCAG 2.2 AA contrast for every pair | src/lintheme/ |
 | Print to PDF | ~/Documents/prints (Settings), unique names | backend_pdf |
-| Settings | Theme, PDF folder, low-ink %, network Not Supported, features, diagnostics | pages/page_settings.py |
-| About | What it is, compatibility, privacy, licence, files, shortcuts, versions, credits | pages/page_about.py |
 | Feature: Ink alerts | Warns before printing at or below the low-ink level (on) | features/feature_ink_alerts.py |
 | Feature: Print profiles | Built-in and saved presets on the Print page (off) | features/feature_profiles.py |
 | Test printer | --test-printer, tests, walkthrough | backends/test_printer.py |

@@ -7,12 +7,14 @@ printer-specific: the Print page shows only what the chosen printer supports.
 import os
 
 # Colour and quality (IPP print-color-mode / print-quality)
-COLOR_MODES = {"color": "Color", "monochrome": "Black & White"}
+COLOR_MODES = {"color": "Colour", "monochrome": "Black & white"}
 QUALITIES = {"draft": "Draft", "normal": "Normal", "high": "High"}
 DEFAULT_QUALITY = "normal"
 
 # Page selection (done by LinPrinter: many printers have no page-ranges)
-PAGE_CHOICES = {"all": "All", "range": "Range…", "odd": "Odd", "even": "Even", "current": "Current"}
+PAGE_CHOICES = {"all": "All", "range": "Custom", "odd": "Odd", "even": "Even", "current": "Current"}
+PAGES_MAIN = ("all", "range", "current")  # the Pages choice on the Print page
+PAGES_WHICH = ("all", "odd", "even")  # More options: which of All
 
 # Fitting (Ghostscript renders onto the chosen paper)
 SCALING = {"fit": "Fit to page", "none": "Actual size"}

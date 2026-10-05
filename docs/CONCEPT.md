@@ -1,5 +1,7 @@
 # LinPrinter: technical concept
 
+> The original concept (2026-09-22). The 0.3.0 redesign changed the layout: four places (Print, Activity, Printer, Settings), "Range" became **Custom** pages. See README §1 and `docs/design/redesign-2026/` — superseded by the 0.3.0 redesign where they differ.
+
 Status: **concept for review**, 2026-09-22. Nothing is built yet.
 - **Target:** the connected **Canon TR150 series**, designed so that any
   modern printer works the same way.

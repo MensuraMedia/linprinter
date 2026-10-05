@@ -1,134 +1,164 @@
 """
-Settings Page
-Theme; Print to PDF folder (~/Documents/prints by default); low-ink warning
-level; network printing (shown as Not Supported); feature modules;
-diagnostics (log folder, save a diagnostics zip).
+Settings Page (2026 redesign; About folded in)
+Sections, chosen on the left:
+- Printing: Print to PDF folder, the low-ink warning level, what to do at start,
+  and the optional features (switches with one-line descriptions);
+- Privacy and diagnostics: what stays on this computer (USB only, no network,
+  no telemetry, no AI), the files LinPrinter keeps, Save diagnostics;
+- About: version, what it is, compatibility, licence, system, credits, shortcuts.
+There is one theme (Graphite Night), so there is no theme choice.
 """
 
 import os
+import platform
 
 import gi
 
 gi.require_version("Gtk", "3.0")
-gi.require_version("Gdk", "3.0")
 gi.require_version("Pango", "1.0")
-from gi.repository import Gdk, Gio, Gtk, Pango  # noqa: E402
+from gi.repository import Gio, Gtk, Pango  # noqa: E402
 
-from config.config_print import NETWORK_PRINTING  # noqa: E402
-from config.config_themes import DEFAULT_THEME_ID, get_all_themes, get_theme  # noqa: E402
+from lintheme import tokens  # noqa: E402
+from lintheme.gtk3 import components as ui  # noqa: E402
 from pages.page_base import BasePage  # noqa: E402
+from utils.util_files import tilde  # noqa: E402
+from utils.util_logging import package_version  # noqa: E402
+from utils.util_paths import APP_ROOT, read_version  # noqa: E402
 
-
-def tilde(path):
-    """A path with the home folder shown as ~"""
-    home = os.path.expanduser("~")
-    return "~" + path[len(home) :] if path and path.startswith(home) else (path or "")
+SECTIONS = [("printing", "Printing"), ("privacy", "Privacy and diagnostics"), ("about", "About")]
 
 
 class SettingsPage(BasePage):
-    """User preferences (saved to ~/.config/linprinter/settings.json)"""
+    """User preferences (saved to ~/.config/linprinter/settings.json) and About"""
 
     def build_content(self):
-        """Theme, printing, features and diagnostics cards"""
-        s = self.ctx.settings
-        self.add_title("Settings")
+        ui.css(self, "lt-page")
+        for setter in (
+            self.set_margin_start,
+            self.set_margin_end,
+            self.set_margin_top,
+            self.set_margin_bottom,
+        ):
+            setter(0)
+        self.set_spacing(16)
+        self.pack_start(ui.text("Settings", "lt-title"), False, False, 0)
+        body = Gtk.Box(spacing=24)
+        self.pack_start(body, True, True, 0)
 
-        card = self.add_card("Theme")
-        self.theme_combo = Gtk.ComboBoxText()
-        for tid, theme in get_all_themes().items():
-            self.theme_combo.append(tid, theme.name)
-        if not self.theme_combo.set_active_id(s.get("theme")):
-            self.theme_combo.set_active_id(DEFAULT_THEME_ID)
-        self.theme_combo.connect("changed", self.on_theme)
-        row = Gtk.Box(spacing=12)
-        row.pack_start(self.theme_combo, False, False, 0)
-        self.swatches = Gtk.Box(spacing=6)
-        row.pack_start(self.swatches, False, False, 0)
-        card.pack_start(self.form_row("Color scheme", row), False, False, 0)
-        self.draw_swatches(get_theme(s.get("theme")))
+        nav = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        nav.set_size_request(200, -1)
+        self.section_buttons = {}
+        group = None
+        for key, label in SECTIONS:
+            b = Gtk.RadioButton.new_with_label_from_widget(group, label)
+            b.set_mode(False)
+            group = group or b
+            ui.css(b, "lt-tab")
+            b.get_child().set_xalign(0)
+            b.connect("toggled", lambda btn, k=key: btn.get_active() and self.show_section(k))
+            self.section_buttons[key] = b
+            nav.pack_start(b, False, False, 0)
+        body.pack_start(nav, False, False, 0)
 
-        card = self.add_card("Printing")
-        row = Gtk.Box(spacing=10)
-        self.pdf_label = self.label(tilde(s.get("pdf_folder")), "info-value", selectable=True)
-        self.pdf_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
-        row.pack_start(self.pdf_label, True, True, 0)
-        choose = Gtk.Button(label="Choose…")
-        choose.set_tooltip_text("Choose the folder Print to PDF saves in")
-        choose.connect("clicked", lambda *_: self.choose_pdf_folder())
-        row.pack_start(choose, False, False, 0)
-        card.pack_start(self.form_row("Print to PDF folder", row), False, False, 0)
-        self.low_ink = Gtk.SpinButton.new_with_range(0, 50, 5)
-        self.low_ink.set_value(s.get("low_ink_percent"))
-        self.low_ink.set_halign(Gtk.Align.START)
-        self.low_ink.connect("value-changed", lambda b: self.save("low_ink_percent", int(b.get_value())))
-        box = Gtk.Box(spacing=8)
-        box.pack_start(self.low_ink, False, False, 0)
-        box.pack_start(self.label("% (Ink alerts warns at or below this level)", "muted"), False, False, 0)
-        card.pack_start(self.form_row("Low ink", box), False, False, 0)
-        row = Gtk.Box(spacing=10)
-        net = Gtk.CheckButton(label="Network printing (Wi-Fi / Ethernet)")
-        net.set_active(NETWORK_PRINTING)
-        net.set_sensitive(False)
-        row.pack_start(net, False, False, 0)
-        row.pack_start(self.label("Not Supported", "muted"), False, False, 0)
-        card.pack_start(row, False, False, 0)
-        desc = self.label(
-            "Only printers connected by USB cable are supported at this time. LinPrinter does not search the "
-            "network for printers, and network print queues are not used.",
-            "muted",
-            wrap=True,
-        )
-        desc.set_margin_start(26)
-        card.pack_start(desc, False, False, 0)
+        self.sections = Gtk.Stack()
+        self.sections.set_vhomogeneous(False)
+        self.sections.set_hexpand(True)
+        self.sections.add_named(self.printing_section(), "printing")
+        self.sections.add_named(self.privacy_section(), "privacy")
+        self.sections.add_named(self.about_section(), "about")
+        body.pack_start(self.sections, True, True, 0)
 
-        if self.ctx.features:
-            card = self.add_card("Features")
-            card.pack_start(
-                self.label(
-                    "Optional modules. Turn any of them off (or delete its file in src/features/) without affecting printing.",
-                    "muted",
-                    wrap=True,
-                ),
-                False,
-                False,
-                0,
-            )
-            self.feature_checks = {}
-            for feature in self.ctx.features.features:
-                check = Gtk.CheckButton(label=feature.name)
-                check.set_active(self.ctx.features.is_enabled(feature))
-                check.connect("toggled", self.on_feature_toggled, feature)
-                self.feature_checks[feature.id] = check
-                card.pack_start(check, False, False, 0)
-                desc = self.label(feature.description, "muted", wrap=True)
-                desc.set_margin_start(26)
-                card.pack_start(desc, False, False, 0)
-            for name, error in self.ctx.features.errors:
-                card.pack_start(self.label(f"⚠ {name}: {error}", "status-error", wrap=True), False, False, 0)
+    def show_section(self, key):
+        """Open a section (the header menu's About uses this)"""
+        self.sections.set_visible_child_name(key)
+        b = self.section_buttons[key]
+        if not b.get_active():
+            b.set_active(True)
 
-        card = self.add_card("Diagnostics")
-        path = self.ctx.log_path or "logging unavailable"
-        card.pack_start(
-            self.label(f"Today's log: {tilde(path)}", "muted", wrap=True, selectable=True), False, False, 0
-        )
-        row = Gtk.Box(spacing=8)
-        open_logs = Gtk.Button(label="Open log folder")
-        open_logs.connect("clicked", lambda *_: self.open_log_folder())
-        save = Gtk.Button(label="Save diagnostics…")
-        save.set_tooltip_text(
-            "A zip with recent logs, system details and printer details, saved on this computer"
-        )
-        save.connect("clicked", lambda *_: self.save_diagnostics())
-        row.pack_start(open_logs, False, False, 0)
-        row.pack_start(save, False, False, 0)
-        card.pack_start(row, False, False, 0)
-        self.diag_status = self.label("", "muted", wrap=True, selectable=True)
-        card.pack_start(self.diag_status, False, False, 0)
+    def show_licence(self):
+        """The full licence text (LICENSE.md, shipped with the app), in a dialog"""
+        try:
+            with open(os.path.join(APP_ROOT, "LICENSE.md"), encoding="utf-8") as f:
+                text = f.read()
+        except OSError:
+            text = "The licence file is missing from this installation. It is CC BY-NC 4.0."
+        dialog = Gtk.Dialog(title="Licence", transient_for=self.ctx.window, modal=True)
+        ui.css(dialog, "lt-root", "lt-dialog")
+        dialog.set_default_size(720, 600)
+        view = Gtk.TextView(editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD)
+        view.get_buffer().set_text(text)
+        for setter in (
+            view.set_left_margin,
+            view.set_right_margin,
+            view.set_top_margin,
+            view.set_bottom_margin,
+        ):
+            setter(16)
+        dialog.get_content_area().pack_start(ui.scrolled(view), True, True, 0)
+        ui.css(dialog.add_button("Close", Gtk.ResponseType.CLOSE), "lt-btn").grab_focus()
+        dialog.show_all()
+        dialog.run()
+        dialog.destroy()
 
     def save(self, key, value):
         """Persist a setting and broadcast settings-changed"""
         self.ctx.settings.set(key, value)
         self.ctx.emit("settings-changed", key)
+
+    # -- Printing ----------------------------------------------------------------------------
+    def printing_section(self):
+        s = self.ctx.settings
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        card = ui.Card("Printing")
+        self.pdf_label = ui.text(tilde(s.get("pdf_folder")), selectable=True)
+        self.pdf_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        change = ui.button("Change…", self.choose_pdf_folder, small=True)
+        change.set_tooltip_text("Choose the folder Print to PDF saves in")
+        card.add_row(ui.field_row("Print to PDF folder", ui.hbox(self.pdf_label, change), label_width=200))
+        self.low_ink = ui.Stepper(
+            int(s.get("low_ink_percent") or 15),
+            0,
+            50,
+            on_change=lambda v: self.save("low_ink_percent", v),
+            accessible_name="Low ink level",
+            unit="%",
+        )
+        card.add_row(
+            ui.field_row(
+                "Warn about low ink at",
+                self.low_ink,
+                "LinPrinter warns before printing when ink is at or below this level",
+                label_width=200,
+            )
+        )
+        start = ui.select(
+            [("last", "Use the last printer"), ("search", "Search for printers every time")],
+            "search" if s.get("search_at_start") else "last",
+            lambda v: self.save("search_at_start", v == "search"),
+            "When LinPrinter starts",
+        )
+        card.add_row(ui.field_row("When LinPrinter starts", start, label_width=200))
+        box.pack_start(card, False, False, 0)
+
+        if self.ctx.features:
+            feats = ui.Card("Optional features")
+            feats.add_row(
+                ui.text("Each one can be turned off without affecting printing.", "lt-muted", wrap=True)
+            )
+            self.feature_switches = {}
+            for feature in self.ctx.features.features:
+                row = ui.SwitchRow(
+                    feature.name,
+                    feature.description,
+                    self.ctx.features.is_enabled(feature),
+                    lambda on, f=feature: self.on_feature(f, on),
+                )
+                self.feature_switches[feature.id] = row.switch
+                feats.add_row(row)
+            for name, error in self.ctx.features.errors:
+                feats.add_row(ui.Banner("error", f"{name}: {error}"))
+            box.pack_start(feats, False, False, 0)
+        return box
 
     def choose_pdf_folder(self):
         """Folder dialog for Print to PDF"""
@@ -154,22 +184,60 @@ class SettingsPage(BasePage):
         if pdf:
             pdf.methods[0].target = path
 
-    def on_theme(self, combo):
-        """Apply and store the chosen colour scheme"""
-        theme = get_theme(combo.get_active_id())
-        self.ctx.theme.apply_theme(theme)
-        self.save("theme", combo.get_active_id())
-        self.draw_swatches(theme)
-
-    def on_feature_toggled(self, check, feature):
+    def on_feature(self, feature, on):
         """Enable or disable a feature module"""
-        if check.get_active() == self.ctx.features.is_enabled(feature):
+        if on == self.ctx.features.is_enabled(feature):
             return
-        self.ctx.features.set_enabled(feature.id, check.get_active())
+        self.ctx.features.set_enabled(feature.id, on)
         self.ctx.emit("features-changed")
 
+    # -- Privacy and diagnostics ---------------------------------------------------------------
+    def privacy_section(self):
+        from modules.manager_documents import recent_path
+        from modules.manager_settings import default_path
+        from utils.util_logging import log_dir
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        card = ui.Card("Everything stays on this computer")
+        for line in (
+            "Documents go only down the USB cable to your printer, or into your Print to PDF folder.",
+            "No network: LinPrinter doesn't search the network and ignores network print queues.",
+            "No account, no telemetry, no update checks.",
+            "No AI: LinPrinter doesn't use AI or generate content.",
+        ):
+            row = Gtk.Box(spacing=10)
+            tick = ui.icon("check", 18, tokens.COLOR["ok"])
+            tick.set_valign(Gtk.Align.START)
+            row.pack_start(tick, False, False, 0)
+            row.pack_start(ui.text(line, wrap=True), True, True, 0)
+            card.add_row(row)
+        box.pack_start(card, False, False, 0)
+
+        files = ui.Card("What LinPrinter keeps")
+        files.add_row(
+            ui.key_values(
+                [
+                    ("Settings", tilde(default_path())),
+                    ("Activity history", tilde(recent_path())),
+                    ("Logs, kept 14 days (serials and home folder removed)", tilde(log_dir())),
+                    ("Jobs being prepared", "/tmp/linprinter-*/ (deleted when LinPrinter closes)"),
+                ]
+            )
+        )
+        row = Gtk.Box(spacing=8)
+        save = ui.button("Save diagnostics…", self.save_diagnostics, small=True)
+        save.set_tooltip_text(
+            "A zip with recent logs, system details and printer details, saved where you choose"
+        )
+        row.pack_start(save, False, False, 0)
+        row.pack_start(ui.button("Open logs folder", self.open_log_folder, small=True), False, False, 0)
+        files.add_row(row)
+        self.diag_status = ui.text("", "lt-muted", wrap=True, selectable=True)
+        files.add_row(self.diag_status)
+        box.pack_start(files, False, False, 0)
+        return box
+
     def open_log_folder(self):
-        """Open the log folder in the file manager"""
         from utils.util_logging import log_dir
 
         folder = log_dir()
@@ -206,7 +274,6 @@ class SettingsPage(BasePage):
         sections["Settings"] = "\n".join(
             f"{k}: {self.ctx.settings.get(k)}"
             for k in (
-                "theme",
                 "color_mode",
                 "quality",
                 "paper",
@@ -219,37 +286,84 @@ class SettingsPage(BasePage):
         try:
             write_diagnostics(path, sections)
         except OSError as e:
-            self.diag_status.set_text(f"Could not save diagnostics: {e}")
+            self.diag_status.set_text(f"Couldn't save diagnostics: {e}")
             return
         get_logger("ui").info("diagnostics saved to %s", path)
-        self.diag_status.set_text(f"Diagnostics saved: {path}")
+        self.diag_status.set_text(f"Diagnostics saved: {tilde(path)}")
 
-    def draw_swatches(self, theme):
-        """Colour dots for the theme's main colours"""
-        for child in self.swatches.get_children():
-            self.swatches.remove(child)
-        for color in (
-            theme.window_bg,
-            theme.card_bg,
-            theme.raised_bg,
-            theme.accent_color,
-            theme.text_secondary,
-        ):
-            area = Gtk.DrawingArea()
-            area.set_size_request(22, 22)
-            rgba = Gdk.RGBA()
-            rgba.parse(color)
-            area.connect("draw", self._draw_dot, rgba)
-            self.swatches.pack_start(area, False, False, 0)
-        self.swatches.show_all()
+    # -- About -----------------------------------------------------------------------------------
+    def about_section(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        card = ui.Card(f"LinPrinter {read_version()}")
+        card.add_row(
+            ui.text(
+                "A document printer for Linux: driverless printing over USB, the system print queue as a backup, "
+                "and Print to PDF. Only the options your printer really has; the preview shows exactly what will print.",
+                wrap=True,
+            )
+        )
+        card.add_row(
+            ui.key_values(
+                [
+                    (
+                        "Printers",
+                        "USB printers that print driverless (IPP Everywhere / AirPrint over IPP-USB), and any USB printer with a CUPS queue",
+                    ),
+                    ("Verified", "Canon TR150 series (USB, driverless)"),
+                    ("Documents", "PDF, PNG, JPEG, TIFF, BMP, GIF, plain text"),
+                    ("Not yet", "Wi-Fi and network printers, automatic two-sided printing, N-up, booklets"),
+                ]
+            )
+        )
+        keys = ui.button("Keyboard shortcuts", lambda: self.ctx.window.show_shortcuts(), small=True)
+        keys.set_halign(Gtk.Align.START)
+        card.add_row(keys)
+        box.pack_start(card, False, False, 0)
 
-    @staticmethod
-    def _draw_dot(area, cr, rgba):
-        """Cairo draw handler for one swatch"""
-        w, h = area.get_allocated_width(), area.get_allocated_height()
-        cr.arc(w / 2, h / 2, min(w, h) / 2 - 1, 0, 6.2832)
-        cr.set_source_rgba(rgba.red, rgba.green, rgba.blue, 1)
-        cr.fill_preserve()
-        cr.set_source_rgba(0.5, 0.5, 0.5, 0.6)
-        cr.set_line_width(1)
-        cr.stroke()
+        lic = ui.Card("Licence")
+        lic.add_row(
+            ui.text(
+                "Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0): free to use, share and "
+                "adapt for any noncommercial purpose, with credit and a link to the licence. Commercial use needs "
+                "written permission from MensuraMedia. The components LinPrinter builds on keep their own licences.",
+                wrap=True,
+            )
+        )
+        read = ui.button("Read the full licence", self.show_licence, small=True)
+        read.set_halign(Gtk.Align.START)
+        lic.add_row(read)
+        box.pack_start(lic, False, False, 0)
+
+        try:
+            gtk = f"{Gtk.get_major_version()}.{Gtk.get_minor_version()}.{Gtk.get_micro_version()}"
+        except Exception:
+            gtk = "?"
+        system = ui.Card("System")
+        system.add_row(
+            ui.key_values(
+                [
+                    ("CUPS", package_version("cups")),
+                    ("cups-filters", package_version("cups-filters")),
+                    ("ipp-usb", package_version("ipp-usb")),
+                    ("Ghostscript", package_version("ghostscript")),
+                    ("Python", platform.python_version()),
+                    ("GTK", gtk),
+                ]
+            )
+        )
+        box.pack_start(system, False, False, 0)
+
+        credits = ui.Card("Credits")
+        credits.add_row(
+            ui.key_values(
+                [
+                    ("Made by", "MensuraMedia · sibling of LinScanner · part of linux-peripherals"),
+                    ("Look", "LinAppTemplate (Graphite Night)"),
+                    ("Printing", "CUPS, cups-filters and ipp-usb (OpenPrinting), IPP Everywhere (PWG)"),
+                    ("Rendering", "Ghostscript (Artifex), Pillow"),
+                    ("Icons", "Phosphor Icons by Helena Zhang and Tobias Fried (MIT)"),
+                ]
+            )
+        )
+        box.pack_start(credits, False, False, 0)
+        return box

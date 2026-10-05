@@ -48,7 +48,8 @@ def test_kernel_log_unreadable_means_nothing_known(monkeypatch):
 
     monkeypatch.setattr(usb_link.subprocess, "run", boom)
     assert usb_link.kernel_log() == ""
-    assert usb_link.recent() == {}
+    assert usb_link.recent(max_age=0) == {}
+    assert not usb_link.log_readable()
 
 
 def _manager(tmp_path, info=None):
@@ -116,3 +117,32 @@ def test_linktest_tool(tmp_path):
     for name, value in {"idVendor": "04a9", "idProduct": "18a4", "busnum": "3", "devnum": "104"}.items():
         (dev / name).write_text(value + "\n")
     assert lt.find("04A9:18A4", str(tmp_path)) == [("/dev/bus/usb/003/104", "3-1")]
+
+
+def test_journal_without_permission_is_unreadable(monkeypatch):
+    """journalctl exits 0 for a user outside adm, without the kernel's lines: that is unknown, not quiet"""
+    import subprocess
+
+    from backends import usb_link
+
+    class R:
+        returncode, stdout = 0, ""
+        stderr = "Hint: You are currently not seeing messages from other users and the system.\n"
+
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: R())
+    assert usb_link.recent(max_age=0) == {}
+    assert not usb_link.log_readable()
+
+
+def test_reading_is_cached_and_the_ui_never_reads(monkeypatch):
+    """recent() reuses a fresh reading; cached() never runs journalctl"""
+    from backends import usb_link
+
+    calls = []
+    monkeypatch.setattr(usb_link, "kernel_log", lambda minutes=10: calls.append(1) or "")
+    usb_link._state["readable"] = True
+    usb_link.recent()
+    usb_link.recent()
+    assert len(calls) == 1
+    usb_link.cached()
+    assert len(calls) == 1

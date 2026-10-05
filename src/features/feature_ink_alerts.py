@@ -14,7 +14,7 @@ class Feature(BaseFeature):
 
     id = "ink_alerts"
     name = "Ink alerts"
-    description = "Warns before printing when a cartridge is low or empty (level set in Settings)."
+    description = "Warns before printing when a cartridge is low or empty."
     default_enabled = True
     order = 10
 

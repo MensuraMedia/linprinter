@@ -19,7 +19,7 @@
       "ghostscript",
       "fontconfig",
       "fonts-dejavu-core",
-      "librsvg2-common"
+      "librsvg2-common", "fonts-ubuntu"
     ]
   }
 }

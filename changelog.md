@@ -2,6 +2,37 @@
 
 All notable changes to LinPrinter. Semantic versioning; newest first.
 
+## 0.3.0 — 2026-10-02
+
+- **The 2026 redesign, in Graphite Night.** Four destinations instead of seven: **Print** (the live
+  preview built in), **Activity** (Queue and Recent merged: Now printing, History with the result of
+  every print and Print again with its settings), **Printer** (health first: Ready · Busy · Needs you ·
+  Can't reach, then ink, connection, upkeep, the printer's own defaults and details) and **Settings**
+  (Printing, Privacy and diagnostics, About). A status chip in the header on every page.
+- **Built on LinAppTemplate** (formerly lin-dashboard-theme; github.com/MensuraMedia/linapptemplate) (`src/lintheme`, vendored, 1.2.3): one set of tokens for colour,
+  type, space and size; WCAG 2.2 AA contrast tested for every pair; targets of 32 px or more; a
+  visible focus ring; every icon-only control named. Ubuntu font (`fonts-ubuntu`, a new dependency).
+- **Print says why it can't print**, beside the button: "Open a document first", "Load paper first",
+  "Fix the connection first". While printing, the button reads "Printing…", Cancel asks first, and the
+  progress bar follows the printer's page count. The end says what happened and how long it took.
+- **History tells the truth**: a cancelled job is "Cancelled", a job the printer stopped is "Stopped by
+  the printer", and a print lost to the USB link is "Stopped: USB link dropped" — never "Printed".
+- **Can't reach leads with the evidence and the cable**, with Troubleshoot and Test connection in
+  place. The **Troubleshooter** walks six steps, cheapest first, and only calls a step the fix when
+  the printer itself answers again. **Test connection** asks the printer 20 small questions (no
+  password, nothing printed) and keeps the result on the Connection card.
+- **The Printer page checks the printer every 5 s while it is open.** A stray system queue shows the
+  exact command to remove it (copied on request; LinPrinter never holds administrator rights).
+- Preview: a dashed printable-edge guide, no scroll bars at fit, an empty state that says what to do.
+- **No fallback when the paper runs out at the last moment**: a job the printer refuses because it
+  needs you is said in words ("Load paper in the rear tray"), never retried through the CUPS queue.
+- **Uniform Output controls**: copies, colour, quality and pages share one width with equal segments.
+  **Custom pages** (formerly Range): one page (`2`) or several (`1-3, 5`).
+- **Dropdowns ignore the mouse wheel**: scrolling the options past Paper size or type scrolls the page
+  instead of silently changing the choice (lintheme `no_wheel`, on every dropdown).
+- Removed: the separate Preview, Queue, Recent, Printers and About pages (old `--page` names still
+  open the matching new page), and the theme picker.
+
 ## 0.2.8 — 2026-10-01
 
 - **A failing USB link is named, not hidden.** LinPrinter reads the last 10 minutes of the kernel log
