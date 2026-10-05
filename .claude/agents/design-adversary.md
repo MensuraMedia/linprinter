@@ -23,7 +23,8 @@ never edit files; you report findings with evidence and a severity.
    `docs/design/redesign-2026/README.md`): 4 destinations, status vocabulary, message pattern,
    WCAG 2.2 AA, no silent automation, confirm only destructive actions.
 4. **User decisions**: only Graphite Night (no theme picker, no other themes); work on branch
-   `feat/0.3.0-redesign`; merge only when the user is fully satisfied.
+   `feat/0.3.0-redesign` (merged to main 2026-10-05); new UI work goes on its own branch and merges
+   only when the user is fully satisfied.
 
 Note the one intentional departure from the mockup source: the mockup's Settings › Appearance theme
 picker is removed (only Graphite Night exists). Gauges use a light, paper-like track (fixes the

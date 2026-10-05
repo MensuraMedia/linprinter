@@ -60,7 +60,7 @@ minutes at 23:18 made it look good. Lesson: a cable that works briefly is not cl
 (`linktest`) and compare against a known-good device before blaming the printer or the host.
 HOST-USB.md's host theories need re-reading in this light.
 
-## Open after 0.3.0 (2026-10-02, branch feat/0.3.0-redesign)
+## Open after 0.3.0 (2026-10-02; merged to main 2026-10-05)
 
 - Merge to main only when the user is satisfied with the redesign (their rule).
 - Offline pool: run `../bin/make-offline-bundle linprinter && ../bin/test-offline linprinter` from the
@@ -71,4 +71,4 @@ HOST-USB.md's host theories need re-reading in this light.
 - Status asks for every attribute (~119 KB with media-col-database) each poll; a small request (printer-state, -reasons, marker-*, media-ready) would spare the USB link (code review, 2026-10-02).
 - After a failed upload the status re-read is a full Get-Printer-Attributes (up to ~10 s on a dead link); use the small request from the item above.
 - Activity shows no row while LinPrinter is still preparing/sending a job (before the printer has it); Cancel is on the Print page then. User said it's fine (2026-10-02).
-- Merge feat/0.3.0-redesign to main when the user says so; then the linux-peripherals submodule pointer and the offline bundle (fonts-ubuntu).
+- ~~Merge feat/0.3.0-redesign to main~~ done 2026-10-05 (7f8b92b, user: "proceed"); submodule pointer and offline bundle follow.

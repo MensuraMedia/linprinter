@@ -226,5 +226,11 @@
     "version": "0.3.0",
     "type": "docs",
     "summary": "Theme kit renamed LinAppTemplate (github.com/MensuraMedia/linapptemplate); About credit and docs follow"
+  },
+  {
+    "time": "2026-10-05T14:06:54Z",
+    "version": "0.3.0",
+    "type": "chore",
+    "summary": "0.3.0 merged to main after the user's test on the real TR150"
   }
 ]

@@ -99,3 +99,8 @@ same path a print takes. The USB-level test stays a tool (`tools/usb_linktest.py
 `.claude/agents/design-adversary.md` checks screenshots and code against the mockup and the tokens
 (read-only). A UI change is done when it passes, or its departure is listed in
 `docs/design/redesign-2026/README.md`.
+
+## 2026-10-05 — 0.3.0 merged to main
+The user tested the redesign on the real TR150 ("everything is working"), then said "proceed" to the
+merge. `feat/0.3.0-redesign` merged with --no-ff (7f8b92b) after build, lint and 100 tests passed on
+the branch; backup taken first (local-backup-process, 0-3-0-pre-merge-to-main).
